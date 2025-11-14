@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Meal Randomizer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -12,12 +12,10 @@
       --bg: #f3f4f6;
       --card-bg: #ffffff;
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
       --border: #e5e7eb;
-      --text-dark: #111827;
+      --text: #111827;
       --radius: 12px;
-      --shadow: 0 3px 10px rgba(0,0,0,0.08);
-      --group-space: 20px;
+      --shadow: 0 3px 10px rgba(0,0,0,0.06);
     }
 
     body {
@@ -25,7 +23,7 @@
       margin: 0;
       padding: 16px;
       background: var(--bg);
-      color: var(--text-dark);
+      color: var(--text);
       max-width: 900px;
       margin-inline: auto;
     }
@@ -36,25 +34,23 @@
       font-weight: 700;
     }
 
+    h2 {
+      font-size: 20px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    /* Karten */
     .card {
       background: var(--card-bg);
       padding: 18px;
       border-radius: var(--radius);
-      margin-top: 16px;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
+      margin-top: 18px;
     }
 
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 6px;
-    }
-
-    .group {
-      margin-top: var(--group-space);
-    }
-
+    /* Inputs */
     input[type="text"],
     input[type="number"],
     input[type="file"] {
@@ -64,17 +60,18 @@
       border-radius: var(--radius);
       border: 1px solid var(--border);
       box-sizing: border-box;
+      margin-top: 6px;
     }
 
     button {
+      width: 100%;
       padding: 11px 14px;
       font-size: 16px;
       border-radius: var(--radius);
+      border: 1px solid transparent;
       cursor: pointer;
       font-weight: 600;
-      border: 1px solid var(--border);
-      width: 100%;
-      margin-top: 6px;
+      margin-top: 10px;
     }
 
     .primary {
@@ -83,78 +80,50 @@
       border-color: var(--primary);
     }
 
-    .primary:hover {
-      background: var(--primary-hover);
-    }
-
     .secondary {
       background: #e5e7eb;
+      color: #111;
       border-color: #e5e7eb;
     }
 
     .danger {
       background: #dc2626;
-      border-color: #dc2626;
-      color: white;
-      width: auto;
+      color: #fff;
       padding: 6px 10px;
-      margin: 0;
+      width: auto;
+      font-size: 14px;
     }
 
-    /* Filter toggle */
-    .filter-toggle {
-      margin-top: 16px;
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--primary);
-      font-size: 16px;
-    }
-
-    .filter-section {
-      margin-top: 12px;
-      padding: 14px;
-      background: #f9fafb;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      display: none;
-    }
-
-    .filter-row {
+    /* Zuklappbare Titel-Leiste */
+    .collapse-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      padding-bottom: 10px;
     }
 
-    .filter-row label {
-      font-weight: 400;
-      margin-bottom: 0;
+    .collapse-arrow {
+      font-size: 18px;
+      margin-left: 8px;
     }
 
-    .filter-row input {
-      width: 60px;
-      text-align: center;
+    /* kompakte Ein-Zeile */
+    .compact-row {
+      padding: 10px 0;
+      font-size: 16px;
+      border-top: 1px solid var(--border);
     }
 
-    .checkbox-group label {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-      font-weight: 400;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-      width: auto;
-      margin-right: 8px;
+    /* volle Liste */
+    .full-list {
+      margin-top: 12px;
     }
 
     .row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
 
@@ -167,6 +136,20 @@
       border-radius: 999px;
     }
 
+    /* Filter-Felder */
+    .filter-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 0;
+    }
+
+    .filter-row input {
+      width: 60px;
+      text-align: center;
+    }
+
+    /* Plan */
     .plan {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -175,11 +158,11 @@
     }
 
     .day {
-      background: var(--card-bg);
       padding: 14px;
+      background: var(--card-bg);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
       border: 1px solid var(--border);
+      box-shadow: var(--shadow);
     }
 
     .day img {
@@ -189,7 +172,6 @@
       border-radius: var(--radius);
       margin: 10px 0;
     }
-
   </style>
 </head>
 
@@ -197,82 +179,57 @@
 
 <h1>Meal Randomizer</h1>
 
-<!-- ADD MEAL -->
-<div class="card">
-  <h2>Gericht hinzufügen</h2>
+<!-- ============================== -->
+<!-- KARTE 1 – GERICHTE -->
+<!-- ============================== -->
 
-  <div class="group" style="margin-top:0;">
-    <label>Name</label>
-    <input id="name" type="text">
+<div class="card" id="mealsCard">
+
+  <div class="collapse-header" id="mealsToggle">
+    <h2>Gespeicherte Gerichte</h2>
+    <span id="mealsArrow" class="collapse-arrow">►</span>
   </div>
 
-  <div class="group">
-    <label>Ernährungsform</label>
-    <div class="checkbox-group" id="diet">
-      <label><input type="checkbox" value="Fleisch"> Fleisch</label>
-      <label><input type="checkbox" value="Vegetarisch"> Vegetarisch</label>
-      <label><input type="checkbox" value="Vegan"> Vegan</label>
-    </div>
-  </div>
+  <!-- kompakte erste Zeile -->
+  <div id="mealsCompact"></div>
 
-  <div class="group">
-    <label>Aufwand</label>
-    <div class="checkbox-group" id="effort">
-      <label><input type="checkbox" value="Aufwand low"> low</label>
-      <label><input type="checkbox" value="Aufwand medium"> medium</label>
-      <label><input type="checkbox" value="Aufwand high"> high</label>
-    </div>
-  </div>
+  <!-- komplette Liste -->
+  <div id="mealsFull" class="full-list" style="display:none;"></div>
 
-  <div class="group">
-    <label>Nährstoffe</label>
-    <div class="checkbox-group" id="nutri">
-      <label><input type="checkbox" value="High Protein"> High Protein</label>
-      <label><input type="checkbox" value="Low carb"> Low carb</label>
-      <label><input type="checkbox" value="Low fat"> Low fat</label>
-      <label><input type="checkbox" value="Cheat"> Cheat</label>
-      <label><input type="checkbox" value="Healthy"> Healthy</label>
-    </div>
-  </div>
-
-  <div class="group">
-    <label>Eigene Kategorien</label>
-    <input id="custom" type="text" placeholder="z.B. Schnell, Familie">
-  </div>
-
-  <div class="group">
-    <label>Bild</label>
-    <input id="image" type="file" accept="image/*">
-  </div>
-
-  <button class="primary" id="add">Speichern</button>
-  <button class="secondary" id="clear">Alle löschen</button>
-
-  <p id="msg" style="font-size:13px;color:green;"></p>
 </div>
 
+<!-- ============================== -->
+<!-- KARTE 2 – RANDOMIZE NACH KATEGORIEN -->
+<!-- ============================== -->
 
-<!-- MEAL LIST -->
-<div class="card">
-  <h2>Gespeicherte Gerichte (<span id="count">0</span>)</h2>
-  <div id="list"></div>
+<div class="card" id="catCard">
+
+  <div class="collapse-header" id="catToggle">
+    <h2>Randomize nach Kategorien</h2>
+    <span id="catArrow" class="collapse-arrow">►</span>
+  </div>
+
+  <!-- kompakte erste Zeile -->
+  <div id="catCompact"></div>
+
+  <!-- komplette Filterliste -->
+  <div id="catFull" style="display:none; margin-top:12px;">
+    <small>(Leer lassen = komplett zufällig)</small>
+    <div id="filterFields" style="margin-top:12px;"></div>
+  </div>
+
 </div>
 
-<!-- RANDOMIZER -->
+<!-- ============================== -->
+<!-- KARTE 3 – RANDOMIZER -->
+<!-- ============================== -->
+
 <div class="card">
-  <h2>Wochenplan</h2>
+
+  <h2>Anzahl Tage für Randomizer</h2>
 
   <label>Anzahl Tage</label>
   <input id="days" type="number" min="1" value="5">
-
-  <div class="filter-toggle" id="toggleFilter">▼ Filter anzeigen (optional)</div>
-
-  <div class="filter-section" id="filterSection">
-    <strong>Kategorie-Verteilung</strong><br>
-    <small>(Leer lassen = komplett zufällig)</small>
-
-    <div id="filterFields" style="margin-top:12px;"></div>
-  </div>
 
   <button class="primary" id="generate">Randomizer</button>
   <button class="secondary" id="export">Export als Bild</button>
@@ -282,25 +239,22 @@
   <div id="planContainer">
     <div id="plan" class="plan"></div>
   </div>
+
 </div>
 
+<!-- ============================== -->
+<!--        JAVASCRIPT LOGIK        -->
+<!-- ============================== -->
+
 <script>
-  /* ============================================================
-     DATENMODELL
-  ============================================================ */
-  const key = "meals";
-  let meals = JSON.parse(localStorage.getItem(key) || "[]");
+  let meals = JSON.parse(localStorage.getItem("meals") || "[]");
   let plan = [];
 
+  const save = () => localStorage.setItem("meals", JSON.stringify(meals));
+
   /* ============================================================
-     HILFSFUNKTIONEN
+     HILFE
   ============================================================ */
-  const id = () => crypto.randomUUID();
-
-  function save() {
-    localStorage.setItem(key, JSON.stringify(meals));
-  }
-
   function getAllTags() {
     const tags = new Set();
     meals.forEach(m => m.tags.forEach(t => tags.add(t)));
@@ -308,154 +262,118 @@
   }
 
   /* ============================================================
-     FILTER UI AUFBAUEN
-  ============================================================ */
-  function renderFilterFields() {
-    const container = document.getElementById("filterFields");
-    container.innerHTML = "";
-
-    const tags = getAllTags();
-    tags.forEach(tag => {
-      const div = document.createElement("div");
-      div.className = "filter-row";
-
-      div.innerHTML = `
-        <label>${tag}</label>
-        <input type="number" min="0" value="" data-tag="${tag}">
-      `;
-
-      container.appendChild(div);
-    });
-  }
-
-  /* ============================================================
-     MEALS ANZEIGEN
+     GERICHTE DARSTELLEN
   ============================================================ */
   function renderMeals() {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-    document.getElementById("count").textContent = meals.length;
+    const compact = document.getElementById("mealsCompact");
+    const full = document.getElementById("mealsFull");
 
+    if (meals.length === 0) {
+      compact.innerHTML = `<div class="compact-row">Keine Gerichte vorhanden</div>`;
+      full.innerHTML = "";
+      renderFilterFields();
+      return;
+    }
+
+    // kompakte erste Zeile
+    compact.innerHTML = `<div class="compact-row">• ${meals[0].name}</div>`;
+
+    // volle Liste
+    full.innerHTML = "";
     meals.forEach(m => {
       const row = document.createElement("div");
       row.className = "row";
-
-      const left = document.createElement("div");
-      left.innerHTML = `<strong>${m.name}</strong><br>` +
-        m.tags.map(t => `<span class="tag">${t}</span>`).join("");
-
+      row.innerHTML = `
+        <div>
+          <strong>${m.name}</strong><br>
+          ${m.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+        </div>
+      `;
       const del = document.createElement("button");
-      del.textContent = "X";
       del.className = "danger";
+      del.textContent = "X";
       del.onclick = () => {
         meals = meals.filter(x => x.id !== m.id);
         save();
         renderMeals();
         renderFilterFields();
-        renderPlan();
       };
-
-      row.appendChild(left);
       row.appendChild(del);
-      list.appendChild(row);
+      full.appendChild(row);
     });
 
     renderFilterFields();
   }
 
   /* ============================================================
-     MEAL HINZUFÜGEN
+     FILTER DARSTELLEN
   ============================================================ */
-  function getChecked(id) {
-    return [...document.getElementById(id).querySelectorAll("input:checked")].map(c => c.value);
-  }
+  function renderFilterFields() {
+    const compact = document.getElementById("catCompact");
+    const full = document.getElementById("catFull");
+    const container = document.getElementById("filterFields");
 
-  document.getElementById("add").onclick = () => {
-    const name = document.getElementById("name").value.trim();
-    if (!name) return alert("Name fehlt.");
+    const tags = getAllTags();
 
-    const tags = [
-      ...getChecked("diet"),
-      ...getChecked("effort"),
-      ...getChecked("nutri"),
-      ...document.getElementById("custom").value.split(",").map(x => x.trim()).filter(x => x)
-    ];
-
-    const file = document.getElementById("image").files[0];
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => addMeal(name, tags, reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      addMeal(name, tags, null);
+    if (tags.length === 0) {
+      compact.innerHTML = `<div class="compact-row">Keine Kategorien vorhanden</div>`;
+      container.innerHTML = "";
+      return;
     }
-  };
 
-  function addMeal(name, tags, img) {
-    meals.push({ id: id(), name, tags, image: img });
-    save();
-    renderMeals();
+    // kompakte erste Zeile
+    compact.innerHTML = `<div class="compact-row">• ${tags[0]}</div>`;
 
-    document.getElementById("name").value = "";
-    document.getElementById("custom").value = "";
-    document.getElementById("image").value = "";
-    document.querySelectorAll("input[type=checkbox]").forEach(c => (c.checked = false));
-
-    const msg = document.getElementById("msg");
-    msg.textContent = "Gericht gespeichert.";
-    setTimeout(() => (msg.textContent = ""), 2000);
+    // volle Liste
+    container.innerHTML = "";
+    tags.forEach(tag => {
+      const div = document.createElement("div");
+      div.className = "filter-row";
+      div.innerHTML = `
+        <span>${tag}</span>
+        <input type="number" min="0" data-tag="${tag}">
+      `;
+      container.appendChild(div);
+    });
   }
-
-  /* ============================================================
-     ALLE LÖSCHEN
-  ============================================================ */
-  document.getElementById("clear").onclick = () => {
-    if (confirm("Alle löschen?")) {
-      meals = [];
-      save();
-      renderMeals();
-      plan = [];
-      renderPlan();
-    }
-  };
 
   /* ============================================================
      RANDOMIZER
   ============================================================ */
   document.getElementById("generate").onclick = () => {
-    const d = parseInt(document.getElementById("days").value);
+    const days = parseInt(document.getElementById("days").value);
     const planMsg = document.getElementById("planMsg");
-
-    if (!d || d < 1) {
-      planMsg.textContent = "Bitte eine gültige Anzahl Tage eingeben.";
-      return;
-    }
-
-    if (!meals.length) {
-      planMsg.textContent = "Bitte zuerst mindestens ein Gericht speichern.";
-      return;
-    }
-
     planMsg.textContent = "";
 
-    const filterInputs = [...document.querySelectorAll("#filterFields input")];
+    if (!days || days < 1) {
+      planMsg.textContent = "Bitte gültige Anzahl Tage eingeben.";
+      return;
+    }
+
+    if (meals.length === 0) {
+      planMsg.textContent = "Keine Gerichte vorhanden.";
+      return;
+    }
+
+    // Pflichtkategorien
+    const inputs = [...document.querySelectorAll("#filterFields input")];
     let desired = [];
 
-    filterInputs.forEach(inp => {
+    inputs.forEach(inp => {
+      const amount = parseInt(inp.value);
       const tag = inp.dataset.tag;
-      const v = parseInt(inp.value);
-      if (v > 0) {
-        for (let i = 0; i < v; i++) desired.push(tag);
+      if (amount > 0) {
+        for (let i = 0; i < amount; i++) desired.push(tag);
       }
     });
 
-    const randomFillNeeded = d - desired.length;
+    // Resttage auffüllen
+    while (desired.length < days) desired.push("RANDOM");
 
-    for (let i = 0; i < randomFillNeeded; i++) {
-      desired.push("RANDOM");
-    }
+    // Überschuss ignorieren
+    desired = desired.slice(0, days);
 
+    // mischen
     desired.sort(() => Math.random() - 0.5);
 
     plan = [];
@@ -466,9 +384,7 @@
           ? meals
           : meals.filter(m => m.tags.includes(tag));
 
-      if (!candidates.length) {
-        candidates = meals;
-      }
+      if (!candidates.length) candidates = meals;
 
       const chosen = candidates[Math.floor(Math.random() * candidates.length)];
       plan.push({ tag, meal: chosen });
@@ -478,20 +394,15 @@
   };
 
   /* ============================================================
-     RESET EINZELNER TAGE
+     TAGE EINZELN NEU ZIEHEN
   ============================================================ */
   function reroll(i) {
-    const targetTag = plan[i].tag;
-
+    const tag = plan[i].tag;
     let candidates =
-      targetTag === "RANDOM"
+      tag === "RANDOM"
         ? meals
-        : meals.filter(m => m.tags.includes(targetTag));
-
-    if (!candidates.length) {
-      candidates = meals;
-    }
-
+        : meals.filter(m => m.tags.includes(tag));
+    if (!candidates.length) candidates = meals;
     plan[i].meal = candidates[Math.floor(Math.random() * candidates.length)];
     renderPlan();
   }
@@ -506,20 +417,17 @@
     plan.forEach((item, idx) => {
       const div = document.createElement("div");
       div.className = "day";
-
       div.innerHTML = `<strong>Tag ${idx + 1}</strong><br>`;
 
-      if (item.meal.image) {
+      if (item.meal.image)
         div.innerHTML += `<img src="${item.meal.image}">`;
-      }
 
-      div.innerHTML += `<div>${item.meal.name}</div>`;
-      div.innerHTML += item.meal.tags
-        .map(t => `<span class='tag'>${t}</span>`)
-        .join("");
+      div.innerHTML += `${item.meal.name}<br>`;
+      div.innerHTML += item.meal.tags.map(t => `<span class="tag">${t}</span>`).join("");
 
       const btn = document.createElement("button");
       btn.className = "secondary";
+      btn.style.marginTop = "10px";
       btn.textContent = "Neu ziehen";
       btn.onclick = () => reroll(idx);
 
@@ -542,23 +450,40 @@
   };
 
   /* ============================================================
-     FILTER TOGGLE
+     ZUKLAPPEN – GERICHTE
   ============================================================ */
-  document.getElementById("toggleFilter").onclick = () => {
-    const sec = document.getElementById("filterSection");
-    const toggle = document.getElementById("toggleFilter");
+  document.getElementById("mealsToggle").onclick = () => {
+    const full = document.getElementById("mealsFull");
+    const arrow = document.getElementById("mealsArrow");
 
-    if (sec.style.display === "none" || sec.style.display === "") {
-      sec.style.display = "block";
-      toggle.textContent = "▲ Filter ausblenden";
+    if (full.style.display === "none") {
+      full.style.display = "block";
+      arrow.textContent = "▼";
     } else {
-      sec.style.display = "none";
-      toggle.textContent = "▼ Filter anzeigen (optional)";
+      full.style.display = "none";
+      arrow.textContent = "►";
+    }
+  };
+
+  /* ============================================================
+     ZUKLAPPEN – KATEGORIEN
+  ============================================================ */
+  document.getElementById("catToggle").onclick = () => {
+    const full = document.getElementById("catFull");
+    const arrow = document.getElementById("catArrow");
+
+    if (full.style.display === "none") {
+      full.style.display = "block";
+      arrow.textContent = "▼";
+    } else {
+      full.style.display = "none";
+      arrow.textContent = "►";
     }
   };
 
   /* INIT */
   renderMeals();
+  renderFilterFields();
   renderPlan();
 </script>
 

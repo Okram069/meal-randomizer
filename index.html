@@ -40,7 +40,6 @@
       font-weight: 600;
     }
 
-    /* Karten */
     .card {
       background: var(--card-bg);
       padding: 18px;
@@ -50,7 +49,6 @@
       margin-top: 18px;
     }
 
-    /* Form-Blöcke mit Abstand */
     .form-group {
       margin-top: 20px;
     }
@@ -58,7 +56,6 @@
       margin-top: 0;
     }
 
-    /* Inputs */
     input[type="text"],
     input[type="number"],
     input[type="file"] {
@@ -71,7 +68,6 @@
       margin-top: 6px;
     }
 
-    /* Checkbox-Gruppen */
     .checkbox-group {
       margin-top: 6px;
     }
@@ -119,7 +115,6 @@
       font-size: 14px;
     }
 
-    /* Zuklappbare Titel-Leiste */
     .collapse-header {
       display: flex;
       justify-content: space-between;
@@ -133,14 +128,12 @@
       margin-left: 8px;
     }
 
-    /* kompakte Ein-Zeile */
     .compact-row {
       padding: 10px 0;
       font-size: 16px;
       border-top: 1px solid var(--border);
     }
 
-    /* volle Liste */
     .full-list {
       margin-top: 12px;
     }
@@ -161,7 +154,6 @@
       border-radius: 999px;
     }
 
-    /* Filter-Felder */
     .filter-row {
       display: flex;
       justify-content: space-between;
@@ -174,7 +166,6 @@
       text-align: center;
     }
 
-    /* Plan */
     .plan {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -212,8 +203,7 @@
   <h2>Gericht hinzufügen</h2>
 
   <div class="form-group first">
-    <label>Name</label>
-    <input id="name" type="text">
+    <input id="name" type="text" placeholder="Name">
   </div>
 
   <div class="form-group">
@@ -262,7 +252,7 @@
 </div>
 
 <!-- ========================================================== -->
-<!--       KARTE 2: GESPEICHERTE GERICHTE (ZUKLAPPBAR)          -->
+<!--  KARTE 2: GESPEICHERTE GERICHTE                           -->
 <!-- ========================================================== -->
 
 <div class="card" id="mealsCard">
@@ -278,7 +268,7 @@
 </div>
 
 <!-- ========================================================== -->
-<!--       KARTE 3: RANDOMIZE NACH KATEGORIEN                   -->
+<!--  KARTE 3: RANDOMIZE NACH KATEGORIEN                        -->
 <!-- ========================================================== -->
 
 <div class="card" id="catCard">
@@ -298,7 +288,7 @@
 </div>
 
 <!-- ========================================================== -->
-<!--       KARTE 4: ANZAHL TAGE FÜR RANDOMIZER                  -->
+<!--  KARTE 4: ANZAHL TAGE                                      -->
 <!-- ========================================================== -->
 
 <div class="card">
@@ -317,7 +307,7 @@
 </div>
 
 <!-- ========================================================== -->
-<!--       JAVASCRIPT                                           -->
+<!-- JAVASCRIPT                                                 -->
 <!-- ========================================================== -->
 
 <script>

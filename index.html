@@ -38,6 +38,8 @@
       min-height: 100vh;
     }
 
+    /* SIDEBAR */
+
     .sidebar {
       width: var(--sidebar-width);
       background: #fff;
@@ -133,6 +135,8 @@
       color: var(--muted);
       margin-top: 8px;
     }
+
+    /* MAIN */
 
     .main {
       flex: 1;
@@ -259,6 +263,8 @@
       min-height: 16px;
       margin-top: 4px;
     }
+
+    /* MODALS */
 
     .backdrop {
       position: fixed;
@@ -458,6 +464,8 @@
       margin-top: 4px;
     }
 
+    /* Weekly plan */
+
     .plan-grid {
       display: flex;
       flex-direction: column;
@@ -509,6 +517,8 @@
       color: var(--muted);
     }
 
+    /* Sidebar mobile */
+
     .sidebar-backdrop {
       display: none;
       position: fixed;
@@ -544,6 +554,7 @@
 </head>
 <body>
   <div class="app-shell">
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h2>Saved meals</h2>
@@ -556,6 +567,7 @@
     </aside>
     <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
+    <!-- MAIN -->
     <main class="main">
       <header class="app-header">
         <button id="menuBtn" class="menu-btn" aria-label="Open sidebar">
@@ -569,6 +581,7 @@
         <h1>Meal Randomizer</h1>
       </header>
 
+      <!-- Add meal card -->
       <section class="card">
         <h2>Add meal</h2>
         <label for="mealNameInput">Meal name</label>
@@ -579,6 +592,7 @@
         </div>
       </section>
 
+      <!-- Randomizer card -->
       <section class="card">
         <h2>Weekly plan</h2>
         <label for="daysInput">Number of days</label>
@@ -589,8 +603,10 @@
     </main>
   </div>
 
+  <!-- Shared backdrop for all modals -->
   <div id="backdrop" class="backdrop"></div>
 
+  <!-- Add-flow modal (categories + image, 2 steps) -->
   <div id="addFlowModal" class="modal">
     <div class="modal-panel">
       <div class="modal-header">
@@ -605,6 +621,7 @@
       </div>
       <div class="modal-body wizard-container">
         <div id="addWizardSteps" class="wizard-steps">
+          <!-- Step 0: categories -->
           <div class="wizard-step" id="addStepCategories">
             <div class="section-label">Dietary preference</div>
             <div class="checkbox-group" id="dietGroup">
@@ -635,6 +652,7 @@
                    placeholder="e.g. Quick, Family, Guests" />
           </div>
 
+          <!-- Step 1: image -->
           <div class="wizard-step" id="addStepImage">
             <div class="section-label">Suggested image</div>
             <div id="suggestedImageBox" class="image-box">
@@ -666,6 +684,7 @@
     </div>
   </div>
 
+  <!-- Edit-meal modal -->
   <div id="editModal" class="modal">
     <div class="modal-panel">
       <div class="modal-header">
@@ -737,6 +756,7 @@
     </div>
   </div>
 
+  <!-- Delete-confirm modal -->
   <div id="deleteModal" class="modal">
     <div class="modal-panel">
       <div class="modal-header">
@@ -764,6 +784,7 @@
     </div>
   </div>
 
+  <!-- Weekly plan modal -->
   <div id="planModal" class="modal">
     <div class="modal-panel" id="planModalPanel">
       <div class="modal-header">
@@ -785,6 +806,7 @@
     </div>
   </div>
 
+  <!-- html2canvas for PNG export -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
@@ -822,7 +844,7 @@
       const hue = (safeName.length * 47) % 360;
       const colorBg = `hsl(${hue}, 70%, 55%)`;
       const colorAccent = `hsl(${(hue + 40) % 360}, 80%, 45%)`;
-      const escapedName = safeName.replace(/&/g, "&amp;`);
+      const escapedName = safeName.replace(/&/g, "&amp;");
 
       const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="900">

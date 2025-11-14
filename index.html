@@ -814,7 +814,7 @@
     const qs = (sel) => document.querySelector(sel);
     const qsa = (sel) => document.querySelectorAll(sel);
 
-    // Storage key
+    // Storage keys
     const STORAGE_KEY = "mealRandomizerMeals";
     const PLAN_KEY = "mealRandomizerWeeklyPlan";
 
@@ -824,6 +824,7 @@
     let editingMealId = null;
     let deleteTargetId = null;
     let weeklyPlan = []; // array of meal ids
+    let currentModalId = null; // for ESC / Enter behaviour
 
     function loadMeals() {
       try {
@@ -837,9 +838,34 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
     }
 
-    function getSuggestedImageUrl(name) {
-      const q = encodeURIComponent(name + " food");
-      return "https://source.unsplash.com/600x400/?" + q;
+    // "AI-like" offline image suggestion as inline SVG
+    function getSuggestedImageDataUrl(name) {
+      const safeName = (name || "Meal").trim();
+      const parts = safeName.split(/\s+/).slice(0, 2);
+      const initials = parts.map(p => p[0]?.toUpperCase() || "").join("") || "M";
+      const hue = (safeName.length * 47) % 360;
+      const colorBg = `hsl(${hue}, 70%, 55%)`;
+      const colorAccent = `hsl(${(hue + 40) % 360}, 80%, 45%)`;
+      const escapedName = safeName.replace(/&/g, "&amp;");
+
+      const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${colorBg}" />
+      <stop offset="100%" stop-color="${colorAccent}" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#g)" rx="32" ry="32"/>
+  <text x="50%" y="46%" text-anchor="middle" fill="white"
+        font-size="64"
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-weight="700">${initials}</text>
+  <text x="50%" y="72%" text-anchor="middle" fill="rgba(255,255,255,0.9)"
+        font-size="26"
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">${escapedName}</text>
+</svg>`;
+      return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
     }
 
     // Sidebar rendering
@@ -883,10 +909,12 @@
     // Backdrop + modal helpers
     const backdrop = $("backdrop");
     function openModal(modal) {
+      currentModalId = modal.id;
       backdrop.classList.add("active");
       modal.classList.add("active");
     }
     function closeModal(modal) {
+      if (currentModalId === modal.id) currentModalId = null;
       modal.classList.remove("active");
       backdrop.classList.remove("active");
     }
@@ -909,7 +937,7 @@
       const name = nameInput.value.trim();
       if (!name) return;
       tempMeal = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
         name,
         dietary: [],
         effort: null,
@@ -925,6 +953,14 @@
       openModal($("addFlowModal"));
     });
 
+    // Enter in name field triggers Save
+    $("mealNameInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        $("addMealBtn").click();
+      }
+    });
+
     function resetAddFlowUI() {
       // Clear categories
       qsa("#dietGroup input[type=checkbox]").forEach(cb => cb.checked = false);
@@ -932,16 +968,16 @@
       $("customCategoriesInput").value = "";
       qsa("#effortSegment button").forEach(b => b.classList.remove("active"));
 
-      // Suggested image
+      // Suggested image (always generate, offline, based on name)
       const box = $("suggestedImageBox");
       const cont = $("suggestedImageContainer");
       box.classList.remove("selected");
       cont.innerHTML = '<div class="image-box-placeholder">No suggestion yet.</div>';
       if (tempMeal && tempMeal.name) {
         const img = document.createElement("img");
-        img.src = getSuggestedImageUrl(tempMeal.name);
-        img.alt = "Suggested";
         img.className = "image-preview";
+        img.alt = "Suggested";
+        img.src = getSuggestedImageDataUrl(tempMeal.name);
         cont.innerHTML = "";
         cont.appendChild(img);
         box.classList.add("selected");
@@ -976,7 +1012,7 @@
       e.target.classList.add("active");
     });
 
-    // Suggested image select
+    // Suggested image select (toggle on/off)
     $("suggestedImageBox").addEventListener("click", () => {
       $("suggestedImageBox").classList.toggle("selected");
     });
@@ -1089,14 +1125,14 @@
       const sugCont = $("editSuggestedImageContainer");
       sugBox.classList.remove("selected");
       sugCont.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = getSuggestedImageUrl(meal.name);
-      img.alt = "Suggested";
-      img.className = "image-preview";
-      sugCont.appendChild(img);
-      if (meal.imageType === "suggested") {
+      const sImg = document.createElement("img");
+      sImg.className = "image-preview";
+      sImg.alt = "Suggested";
+      sImg.src = getSuggestedImageDataUrl(meal.name);
+      sugCont.appendChild(sImg);
+      if (meal.imageType === "suggested" && meal.imageUrl) {
         sugBox.classList.add("selected");
-        img.src = meal.imageUrl || img.src;
+        sImg.src = meal.imageUrl;
       }
 
       // uploaded
@@ -1285,7 +1321,6 @@
         again.textContent = "Randomize again";
         again.onclick = () => {
           // replace this slot with another meal
-          const currentId = weeklyPlan[index];
           const otherIds = weeklyPlan.filter((_, i) => i !== index);
           let pool = meals.filter(m => !otherIds.includes(m.id));
           if (pool.length === 0) pool = meals;
@@ -1307,6 +1342,47 @@
       localStorage.setItem(PLAN_KEY, JSON.stringify(weeklyPlan));
       alert("Your weekly plan has been saved.");
       closeModal($("planModal"));
+    });
+
+    // Global keyboard handling: ESC + Enter behaviour
+    document.addEventListener("keydown", (e) => {
+      const key = e.key;
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+
+      // ESC closes current modal
+      if (key === "Escape") {
+        if (currentModalId === "addFlowModal") {
+          e.preventDefault();
+          $("closeAddFlowBtn").click();
+        } else if (currentModalId === "editModal") {
+          e.preventDefault();
+          $("closeEditModalBtn").click();
+        } else if (currentModalId === "deleteModal") {
+          e.preventDefault();
+          $("closeDeleteModalBtn").click();
+        } else if (currentModalId === "planModal") {
+          e.preventDefault();
+          $("closePlanModalBtn").click();
+        }
+        return;
+      }
+
+      // Enter behaviour (only if not typing in button)
+      if (key === "Enter" && tag !== "button") {
+        if (currentModalId === "addFlowModal") {
+          e.preventDefault();
+          $("addFlowPrimaryBtn").click();
+        } else if (currentModalId === "editModal") {
+          e.preventDefault();
+          $("editSaveBtn").click();
+        } else if (currentModalId === "deleteModal") {
+          // Variante B: Enter = Cancel, nicht Delete
+          e.preventDefault();
+          $("cancelDeleteBtn").click();
+        } else if (currentModalId === "planModal") {
+          // no default Enter action in plan modal
+        }
+      }
     });
 
     // Init

@@ -16,101 +16,139 @@
       --bg: #f3f4f6;
       --card-bg: #ffffff;
       --primary: #2563eb;
+      --primary-hover: #1d4ed8;
       --border: #e5e7eb;
+      --text-dark: #111827;
       --radius: 12px;
       --shadow: 0 3px 10px rgba(0,0,0,0.08);
-      --spacing: 22px; /* DEUTLICHER Abstand */
+      --group-space: 20px;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
       padding: 16px;
       background: var(--bg);
+      color: var(--text-dark);
+      max-width: 900px;
+      margin-inline: auto;
     }
 
-    h1 { font-size: 28px; font-weight: 700; margin-bottom: 14px; }
+    h1 {
+      margin: 0 0 12px 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
 
     .card {
       background: var(--card-bg);
       padding: 18px;
       border-radius: var(--radius);
-      margin-top: 18px;
+      margin-top: 16px;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
     }
 
-    /* MODERNE ABSTANDSREGEL */
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
     .group {
-      margin-top: var(--spacing);
+      margin-top: var(--group-space);
     }
 
-    .checkbox-group label {
-      display: flex;
-      align-items: center;
-      padding: 4px 0;
-      font-size: 15px;
-    }
-
-    .checkbox-group input {
-      margin-right: 10px;
-    }
-
-    input, button {
-      padding: 12px;
-      font-size: 16px;
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
       width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 11px 14px;
+      font-size: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-weight: 600;
     }
 
     .primary {
       background: var(--primary);
-      color: white;
-      border: none;
-      margin-top: 18px;
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
     }
 
     .secondary {
       background: #e5e7eb;
-      border: none;
+      border-color: #e5e7eb;
       margin-top: 6px;
     }
 
     .danger {
       background: #dc2626;
-      color: white;
-      padding: 6px 12px;
+      border-color: #dc2626;
+      color: #fff;
+      padding: 6px 10px;
       font-size: 14px;
-      border-radius: var(--radius);
-      border: none;
+      border-radius: 8px;
       width: auto;
+    }
+
+    .checkbox-group {
+      margin-top: 4px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
     }
 
     .row {
       display: flex;
       justify-content: space-between;
-      padding: 12px 0;
+      align-items: center;
+      padding: 10px 0;
       border-bottom: 1px solid var(--border);
+      gap: 8px;
     }
 
     .tag {
-      background: #e5e7eb;
-      padding: 4px 8px;
-      border-radius: var(--radius);
-      margin: 2px;
-      font-size: 12px;
       display: inline-block;
+      padding: 4px 8px;
+      margin: 2px 4px 0 0;
+      font-size: 12px;
+      background: #e5e7eb;
+      border-radius: 999px;
     }
 
     .plan {
       display: grid;
-      gap: 20px;
-      margin-top: 16px;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      margin-top: 16px;
     }
 
     .day {
-      background: white;
+      background: var(--card-bg);
       padding: 14px;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -131,11 +169,14 @@
 
 <h1>Meal Randomizer</h1>
 
+<!-- ADD MEAL -->
 <div class="card">
   <h2>Gericht hinzufügen</h2>
 
-  <label>Name</label>
-  <input id="name" type="text">
+  <div class="group" style="margin-top: 0;">
+    <label>Name</label>
+    <input id="name" type="text">
+  </div>
 
   <div class="group">
     <label>Ernährungsform</label>
@@ -182,13 +223,16 @@
   <p id="msg" style="font-size:13px;color:green;"></p>
 </div>
 
+<!-- MEAL LIST -->
 <div class="card">
   <h2>Gespeicherte Gerichte (<span id="count">0</span>)</h2>
   <div id="list" class="meal-list"></div>
 </div>
 
+<!-- RANDOMIZER -->
 <div class="card">
   <h2>Wochenplan</h2>
+
   <label>Anzahl Tage</label>
   <input id="days" type="number" min="1" value="5">
 
@@ -209,7 +253,9 @@
 
   const id = () => crypto.randomUUID();
 
-  function save() { localStorage.setItem(key, JSON.stringify(meals)); }
+  function save() {
+    localStorage.setItem(key, JSON.stringify(meals));
+  }
 
   function renderMeals() {
     const list = document.getElementById("list");
@@ -275,8 +321,9 @@
     document.getElementById("image").value = "";
     document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
 
-    document.getElementById("msg").textContent = "Gericht gespeichert.";
-    setTimeout(() => { document.getElementById("msg").textContent = ""; }, 2000);
+    const msg = document.getElementById("msg");
+    msg.textContent = "Gericht gespeichert.";
+    setTimeout(() => { msg.textContent = ""; }, 2000);
   }
 
   document.getElementById("clear").onclick = () => {
@@ -286,8 +333,10 @@
       renderMeals();
       plan = [];
       renderPlan();
-      document.getElementById("msg").textContent = "Alle Gerichte gelöscht.";
-      setTimeout(() => { document.getElementById("msg").textContent = ""; }, 2000);
+
+      const msg = document.getElementById("msg");
+      msg.textContent = "Alle Gerichte gelöscht.";
+      setTimeout(() => { msg.textContent = ""; }, 2000);
     }
   };
 
@@ -329,15 +378,16 @@
 
       div.innerHTML = `<strong>Tag ${item.day}</strong><br>`;
 
-      if (item.meal.image) div.innerHTML += `<img src="${item.meal.image}">`;
+      if (item.meal.image)
+        div.innerHTML += `<img src="${item.meal.image}">`;
 
       div.innerHTML += `<div>${item.meal.name}</div>`;
       div.innerHTML += item.meal.tags.map(t => `<span class='tag'>${t}</span>`).join("");
 
       const btn = document.createElement("button");
       btn.className = "secondary";
+      btn.style.marginTop = "8px";
       btn.textContent = "Neu ziehen";
-      btn.style.marginTop = "10px";
       btn.onclick = () => reroll(idx);
 
       div.appendChild(btn);

@@ -5,10 +5,6 @@
   <title>Meal Randomizer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#2563eb">
-  <link rel="icon" href="icon-192.png" type="image/png">
-
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
@@ -35,8 +31,8 @@
     }
 
     h1 {
-      margin: 0 0 12px 0;
       font-size: 28px;
+      margin-bottom: 14px;
       font-weight: 700;
     }
 
@@ -74,47 +70,79 @@
       padding: 11px 14px;
       font-size: 16px;
       border-radius: var(--radius);
-      border: 1px solid var(--border);
       cursor: pointer;
       font-weight: 600;
+      border: 1px solid var(--border);
+      width: 100%;
+      margin-top: 6px;
     }
 
     .primary {
       background: var(--primary);
-      border-color: var(--primary);
       color: #fff;
+      border-color: var(--primary);
     }
 
     .primary:hover {
       background: var(--primary-hover);
-      border-color: var(--primary-hover);
     }
 
     .secondary {
       background: #e5e7eb;
       border-color: #e5e7eb;
-      margin-top: 6px;
     }
 
     .danger {
       background: #dc2626;
       border-color: #dc2626;
-      color: #fff;
-      padding: 6px 10px;
-      font-size: 14px;
-      border-radius: 8px;
+      color: white;
       width: auto;
+      padding: 6px 10px;
+      margin: 0;
     }
 
-    .checkbox-group {
-      margin-top: 4px;
+    /* Filter toggle */
+    .filter-toggle {
+      margin-top: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 16px;
+    }
+
+    .filter-section {
+      margin-top: 12px;
+      padding: 14px;
+      background: #f9fafb;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    .filter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .filter-row label {
+      font-weight: 400;
+      margin-bottom: 0;
+    }
+
+    .filter-row input {
+      width: 60px;
+      text-align: center;
     }
 
     .checkbox-group label {
       display: flex;
       align-items: center;
-      font-weight: 400;
       margin-bottom: 4px;
+      font-weight: 400;
     }
 
     .checkbox-group input[type="checkbox"] {
@@ -128,7 +156,6 @@
       align-items: center;
       padding: 10px 0;
       border-bottom: 1px solid var(--border);
-      gap: 8px;
     }
 
     .tag {
@@ -162,6 +189,7 @@
       border-radius: var(--radius);
       margin: 10px 0;
     }
+
   </style>
 </head>
 
@@ -173,7 +201,7 @@
 <div class="card">
   <h2>Gericht hinzufügen</h2>
 
-  <div class="group" style="margin-top: 0;">
+  <div class="group" style="margin-top:0;">
     <label>Name</label>
     <input id="name" type="text">
   </div>
@@ -223,10 +251,11 @@
   <p id="msg" style="font-size:13px;color:green;"></p>
 </div>
 
+
 <!-- MEAL LIST -->
 <div class="card">
   <h2>Gespeicherte Gerichte (<span id="count">0</span>)</h2>
-  <div id="list" class="meal-list"></div>
+  <div id="list"></div>
 </div>
 
 <!-- RANDOMIZER -->
@@ -235,6 +264,15 @@
 
   <label>Anzahl Tage</label>
   <input id="days" type="number" min="1" value="5">
+
+  <div class="filter-toggle" id="toggleFilter">▼ Filter anzeigen (optional)</div>
+
+  <div class="filter-section" id="filterSection">
+    <strong>Kategorie-Verteilung</strong><br>
+    <small>(Leer lassen = komplett zufällig)</small>
+
+    <div id="filterFields" style="margin-top:12px;"></div>
+  </div>
 
   <button class="primary" id="generate">Randomizer</button>
   <button class="secondary" id="export">Export als Bild</button>
@@ -247,16 +285,52 @@
 </div>
 
 <script>
+  /* ============================================================
+     DATENMODELL
+  ============================================================ */
   const key = "meals";
   let meals = JSON.parse(localStorage.getItem(key) || "[]");
   let plan = [];
 
+  /* ============================================================
+     HILFSFUNKTIONEN
+  ============================================================ */
   const id = () => crypto.randomUUID();
 
   function save() {
     localStorage.setItem(key, JSON.stringify(meals));
   }
 
+  function getAllTags() {
+    const tags = new Set();
+    meals.forEach(m => m.tags.forEach(t => tags.add(t)));
+    return [...tags].sort();
+  }
+
+  /* ============================================================
+     FILTER UI AUFBAUEN
+  ============================================================ */
+  function renderFilterFields() {
+    const container = document.getElementById("filterFields");
+    container.innerHTML = "";
+
+    const tags = getAllTags();
+    tags.forEach(tag => {
+      const div = document.createElement("div");
+      div.className = "filter-row";
+
+      div.innerHTML = `
+        <label>${tag}</label>
+        <input type="number" min="0" value="" data-tag="${tag}">
+      `;
+
+      container.appendChild(div);
+    });
+  }
+
+  /* ============================================================
+     MEALS ANZEIGEN
+  ============================================================ */
   function renderMeals() {
     const list = document.getElementById("list");
     list.innerHTML = "";
@@ -267,7 +341,8 @@
       row.className = "row";
 
       const left = document.createElement("div");
-      left.innerHTML = `<strong>${m.name}</strong><br>${m.tags.map(t => `<span class="tag">${t}</span>`).join("")}`;
+      left.innerHTML = `<strong>${m.name}</strong><br>` +
+        m.tags.map(t => `<span class="tag">${t}</span>`).join("");
 
       const del = document.createElement("button");
       del.textContent = "X";
@@ -276,6 +351,7 @@
         meals = meals.filter(x => x.id !== m.id);
         save();
         renderMeals();
+        renderFilterFields();
         renderPlan();
       };
 
@@ -283,8 +359,13 @@
       row.appendChild(del);
       list.appendChild(row);
     });
+
+    renderFilterFields();
   }
 
+  /* ============================================================
+     MEAL HINZUFÜGEN
+  ============================================================ */
   function getChecked(id) {
     return [...document.getElementById(id).querySelectorAll("input:checked")].map(c => c.value);
   }
@@ -319,13 +400,16 @@
     document.getElementById("name").value = "";
     document.getElementById("custom").value = "";
     document.getElementById("image").value = "";
-    document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+    document.querySelectorAll("input[type=checkbox]").forEach(c => (c.checked = false));
 
     const msg = document.getElementById("msg");
     msg.textContent = "Gericht gespeichert.";
-    setTimeout(() => { msg.textContent = ""; }, 2000);
+    setTimeout(() => (msg.textContent = ""), 2000);
   }
 
+  /* ============================================================
+     ALLE LÖSCHEN
+  ============================================================ */
   document.getElementById("clear").onclick = () => {
     if (confirm("Alle löschen?")) {
       meals = [];
@@ -333,13 +417,12 @@
       renderMeals();
       plan = [];
       renderPlan();
-
-      const msg = document.getElementById("msg");
-      msg.textContent = "Alle Gerichte gelöscht.";
-      setTimeout(() => { msg.textContent = ""; }, 2000);
     }
   };
 
+  /* ============================================================
+     RANDOMIZER
+  ============================================================ */
   document.getElementById("generate").onclick = () => {
     const d = parseInt(document.getElementById("days").value);
     const planMsg = document.getElementById("planMsg");
@@ -356,18 +439,66 @@
 
     planMsg.textContent = "";
 
-    plan = [];
-    let pool = [...meals];
+    const filterInputs = [...document.querySelectorAll("#filterFields input")];
+    let desired = [];
 
-    for (let i = 1; i <= d; i++) {
-      if (pool.length === 0) pool = [...meals];
-      const m = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-      plan.push({ day: i, meal: m });
+    filterInputs.forEach(inp => {
+      const tag = inp.dataset.tag;
+      const v = parseInt(inp.value);
+      if (v > 0) {
+        for (let i = 0; i < v; i++) desired.push(tag);
+      }
+    });
+
+    const randomFillNeeded = d - desired.length;
+
+    for (let i = 0; i < randomFillNeeded; i++) {
+      desired.push("RANDOM");
     }
+
+    desired.sort(() => Math.random() - 0.5);
+
+    plan = [];
+
+    desired.forEach(tag => {
+      let candidates =
+        tag === "RANDOM"
+          ? meals
+          : meals.filter(m => m.tags.includes(tag));
+
+      if (!candidates.length) {
+        candidates = meals;
+      }
+
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      plan.push({ tag, meal: chosen });
+    });
 
     renderPlan();
   };
 
+  /* ============================================================
+     RESET EINZELNER TAGE
+  ============================================================ */
+  function reroll(i) {
+    const targetTag = plan[i].tag;
+
+    let candidates =
+      targetTag === "RANDOM"
+        ? meals
+        : meals.filter(m => m.tags.includes(targetTag));
+
+    if (!candidates.length) {
+      candidates = meals;
+    }
+
+    plan[i].meal = candidates[Math.floor(Math.random() * candidates.length)];
+    renderPlan();
+  }
+
+  /* ============================================================
+     PLAN ANZEIGEN
+  ============================================================ */
   function renderPlan() {
     const p = document.getElementById("plan");
     p.innerHTML = "";
@@ -376,17 +507,19 @@
       const div = document.createElement("div");
       div.className = "day";
 
-      div.innerHTML = `<strong>Tag ${item.day}</strong><br>`;
+      div.innerHTML = `<strong>Tag ${idx + 1}</strong><br>`;
 
-      if (item.meal.image)
+      if (item.meal.image) {
         div.innerHTML += `<img src="${item.meal.image}">`;
+      }
 
       div.innerHTML += `<div>${item.meal.name}</div>`;
-      div.innerHTML += item.meal.tags.map(t => `<span class='tag'>${t}</span>`).join("");
+      div.innerHTML += item.meal.tags
+        .map(t => `<span class='tag'>${t}</span>`)
+        .join("");
 
       const btn = document.createElement("button");
       btn.className = "secondary";
-      btn.style.marginTop = "8px";
       btn.textContent = "Neu ziehen";
       btn.onclick = () => reroll(idx);
 
@@ -395,14 +528,9 @@
     });
   }
 
-  function reroll(i) {
-    const used = plan.filter((_, x) => x !== i).map(p => p.meal.id);
-    const cand = meals.filter(m => !used.includes(m.id));
-    const pick = cand.length ? cand : meals;
-    plan[i].meal = pick[Math.floor(Math.random() * pick.length)];
-    renderPlan();
-  }
-
+  /* ============================================================
+     EXPORT
+  ============================================================ */
   document.getElementById("export").onclick = () => {
     if (!plan.length) return;
     html2canvas(document.getElementById("planContainer")).then(canvas => {
@@ -413,6 +541,23 @@
     });
   };
 
+  /* ============================================================
+     FILTER TOGGLE
+  ============================================================ */
+  document.getElementById("toggleFilter").onclick = () => {
+    const sec = document.getElementById("filterSection");
+    const toggle = document.getElementById("toggleFilter");
+
+    if (sec.style.display === "none" || sec.style.display === "") {
+      sec.style.display = "block";
+      toggle.textContent = "▲ Filter ausblenden";
+    } else {
+      sec.style.display = "none";
+      toggle.textContent = "▼ Filter anzeigen (optional)";
+    }
+  };
+
+  /* INIT */
   renderMeals();
   renderPlan();
 </script>

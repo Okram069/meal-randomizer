@@ -5,11 +5,9 @@
   <title>Meal Randomizer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Manifest EINBINDUNG (wichtig für App-Installation) -->
+  <!-- Manifest für App-Installation -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#2563eb">
-
-  <!-- Icon (optional, aber okay ohne Datei) -->
   <link rel="icon" href="icon-192.png" type="image/png">
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -173,10 +171,16 @@
     save();
     renderMeals();
 
+    // Felder zurücksetzen
     document.getElementById("name").value = "";
     document.getElementById("custom").value = "";
     document.getElementById("image").value = "";
     document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+
+    // Bestätigung anzeigen
+    const msg = document.getElementById("msg");
+    msg.textContent = "Gericht gespeichert.";
+    setTimeout(() => { msg.textContent = ""; }, 2000);
   }
 
   document.getElementById("clear").onclick = () => {
@@ -186,12 +190,28 @@
       renderMeals();
       plan = [];
       renderPlan();
+
+      const msg = document.getElementById("msg");
+      msg.textContent = "Alle Gerichte gelöscht.";
+      setTimeout(() => { msg.textContent = ""; }, 2000);
     }
   };
 
   document.getElementById("generate").onclick = () => {
     const d = parseInt(document.getElementById("days").value);
-    if (!d || d < 1) return;
+    const planMsg = document.getElementById("planMsg");
+
+    if (!d || d < 1) {
+      planMsg.textContent = "Bitte eine gültige Anzahl Tage eingeben.";
+      return;
+    }
+
+    if (!meals.length) {
+      planMsg.textContent = "Bitte zuerst mindestens ein Gericht speichern.";
+      return;
+    }
+
+    planMsg.textContent = "";
 
     plan = [];
     let pool = [...meals];

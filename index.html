@@ -179,9 +179,54 @@
 
 <h1>Meal Randomizer</h1>
 
-<!-- ============================== -->
-<!-- KARTE 1 – GERICHTE -->
-<!-- ============================== -->
+<!-- ========================================================== -->
+<!--       KARTE 1: GERICHT HINZUFÜGEN                          -->
+<!-- ========================================================== -->
+
+<div class="card">
+  <h2>Gericht hinzufügen</h2>
+
+  <label>Name</label>
+  <input id="name" type="text">
+
+  <label>Ernährungsform</label>
+  <div class="checkbox-group" id="diet">
+    <label><input type="checkbox" value="Fleisch"> Fleisch</label>
+    <label><input type="checkbox" value="Vegetarisch"> Vegetarisch</label>
+    <label><input type="checkbox" value="Vegan"> Vegan</label>
+  </div>
+
+  <label>Aufwand</label>
+  <div class="checkbox-group" id="effort">
+    <label><input type="checkbox" value="Aufwand low"> low</label>
+    <label><input type="checkbox" value="Aufwand medium"> medium</label>
+    <label><input type="checkbox" value="Aufwand high"> high</label>
+  </div>
+
+  <label>Nährstoffe</label>
+  <div class="checkbox-group" id="nutri">
+    <label><input type="checkbox" value="High Protein"> High Protein</label>
+    <label><input type="checkbox" value="Low carb"> Low carb</label>
+    <label><input type="checkbox" value="Low fat"> Low fat</label>
+    <label><input type="checkbox" value="Cheat"> Cheat</label>
+    <label><input type="checkbox" value="Healthy"> Healthy</label>
+  </div>
+
+  <label>Eigene Kategorien</label>
+  <input id="custom" type="text" placeholder="z.B. Schnell, Familie">
+
+  <label>Bild</label>
+  <input id="image" type="file" accept="image/*">
+
+  <button class="primary" id="add">Speichern</button>
+  <button class="secondary" id="clear">Alle löschen</button>
+
+  <p id="msg" style="font-size:13px;color:green;"></p>
+</div>
+
+<!-- ========================================================== -->
+<!--       KARTE 2: GESPEICHERTE GERICHTE (ZUKLAPPBAR)          -->
+<!-- ========================================================== -->
 
 <div class="card" id="mealsCard">
 
@@ -198,9 +243,9 @@
 
 </div>
 
-<!-- ============================== -->
-<!-- KARTE 2 – RANDOMIZE NACH KATEGORIEN -->
-<!-- ============================== -->
+<!-- ========================================================== -->
+<!--       KARTE 3: RANDOMIZE NACH KATEGORIEN (ZUKLAPPBAR)       -->
+<!-- ========================================================== -->
 
 <div class="card" id="catCard">
 
@@ -220,15 +265,15 @@
 
 </div>
 
-<!-- ============================== -->
-<!-- KARTE 3 – RANDOMIZER -->
-<!-- ============================== -->
+<!-- ========================================================== -->
+<!--       KARTE 4: ANZAHL TAGE FÜR RANDOMIZER                  -->
+<!-- ========================================================== -->
 
 <div class="card">
 
   <h2>Anzahl Tage für Randomizer</h2>
 
-  <label>Anzahl Tage</label>
+  <!-- Label entfernt, nur das Eingabefeld bleibt -->
   <input id="days" type="number" min="1" value="5">
 
   <button class="primary" id="generate">Randomizer</button>
@@ -242,28 +287,29 @@
 
 </div>
 
-<!-- ============================== -->
-<!--        JAVASCRIPT LOGIK        -->
-<!-- ============================== -->
+<!-- ========================================================== -->
+<!--       JAVASCRIPT                                           -->
+<!-- ========================================================== -->
 
 <script>
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
   let plan = [];
+  let editId = null; // merkt sich, welches Gericht bearbeitet wird
 
   const save = () => localStorage.setItem("meals", JSON.stringify(meals));
 
-  /* ============================================================
-     HILFE
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* TAGS SAMMELN                                                 */
+  /* ------------------------------------------------------------ */
   function getAllTags() {
     const tags = new Set();
     meals.forEach(m => m.tags.forEach(t => tags.add(t)));
     return [...tags].sort();
   }
 
-  /* ============================================================
-     GERICHTE DARSTELLEN
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* GERICHTE DARSTELLEN                                          */
+  /* ------------------------------------------------------------ */
   function renderMeals() {
     const compact = document.getElementById("mealsCompact");
     const full = document.getElementById("mealsFull");
@@ -275,20 +321,27 @@
       return;
     }
 
-    // kompakte erste Zeile
     compact.innerHTML = `<div class="compact-row">• ${meals[0].name}</div>`;
 
-    // volle Liste
     full.innerHTML = "";
     meals.forEach(m => {
       const row = document.createElement("div");
       row.className = "row";
+
       row.innerHTML = `
         <div>
           <strong>${m.name}</strong><br>
           ${m.tags.map(t => `<span class="tag">${t}</span>`).join("")}
         </div>
       `;
+
+      const edit = document.createElement("button");
+      edit.className = "secondary";
+      edit.style.width = "auto";
+      edit.style.marginRight = "6px";
+      edit.textContent = "✏️";
+      edit.onclick = () => startEdit(m.id);
+
       const del = document.createElement("button");
       del.className = "danger";
       del.textContent = "X";
@@ -298,19 +351,24 @@
         renderMeals();
         renderFilterFields();
       };
-      row.appendChild(del);
+
+      const right = document.createElement("div");
+      right.style.display = "flex";
+      right.appendChild(edit);
+      right.appendChild(del);
+
+      row.appendChild(right);
       full.appendChild(row);
     });
 
     renderFilterFields();
   }
 
-  /* ============================================================
-     FILTER DARSTELLEN
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* FILTER DARSTELLEN                                            */
+  /* ------------------------------------------------------------ */
   function renderFilterFields() {
     const compact = document.getElementById("catCompact");
-    const full = document.getElementById("catFull");
     const container = document.getElementById("filterFields");
 
     const tags = getAllTags();
@@ -321,10 +379,8 @@
       return;
     }
 
-    // kompakte erste Zeile
     compact.innerHTML = `<div class="compact-row">• ${tags[0]}</div>`;
 
-    // volle Liste
     container.innerHTML = "";
     tags.forEach(tag => {
       const div = document.createElement("div");
@@ -337,9 +393,117 @@
     });
   }
 
-  /* ============================================================
-     RANDOMIZER
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* GERICHT HINZUFÜGEN / BEARBEITEN                              */
+  /* ------------------------------------------------------------ */
+
+  function getChecked(id) {
+    return [...document.querySelectorAll(`#${id} input:checked`)].map(c => c.value);
+  }
+
+  document.getElementById("add").onclick = () => {
+    const name = document.getElementById("name").value.trim();
+    if (!name) return alert("Name fehlt.");
+
+    const tags = [
+      ...getChecked("diet"),
+      ...getChecked("effort"),
+      ...getChecked("nutri"),
+      ...document.getElementById("custom").value.split(",").map(x => x.trim()).filter(x => x),
+    ];
+
+    const file = document.getElementById("image").files[0];
+
+    if (editId) {
+      // UPDATE EXISTIERENDES GERICHT
+      const meal = meals.find(m => m.id === editId);
+
+      meal.name = name;
+      meal.tags = tags;
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          meal.image = reader.result;
+          finishEdit();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        finishEdit();
+      }
+
+      return;
+    }
+
+    // NEUES GERICHT
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => addMeal(name, tags, reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      addMeal(name, tags, null);
+    }
+  };
+
+  function addMeal(name, tags, img) {
+    meals.push({ id: crypto.randomUUID(), name, tags, image: img });
+    save();
+    clearForm();
+    renderMeals();
+  }
+
+  function startEdit(id) {
+    const meal = meals.find(m => m.id === id);
+    editId = id;
+
+    document.getElementById("name").value = meal.name;
+
+    document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+    meal.tags.forEach(t => {
+      [...document.querySelectorAll("input[type=checkbox]")].forEach(box => {
+        if (box.value === t) box.checked = true;
+      });
+    });
+
+    document.getElementById("custom").value =
+      meal.tags.filter(t =>
+        !["Fleisch", "Vegetarisch", "Vegan",
+          "Aufwand low", "Aufwand medium", "Aufwand high",
+          "High Protein", "Low carb", "Low fat", "Cheat", "Healthy"
+        ].includes(t)
+      ).join(", ");
+
+    document.getElementById("image").value = "";
+
+    document.getElementById("add").textContent = "Änderungen speichern";
+  }
+
+  function finishEdit() {
+    save();
+    clearForm();
+    renderMeals();
+    editId = null;
+    document.getElementById("add").textContent = "Speichern";
+  }
+
+  function clearForm() {
+    document.getElementById("name").value = "";
+    document.getElementById("custom").value = "";
+    document.getElementById("image").value = "";
+    document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+  }
+
+  document.getElementById("clear").onclick = () => {
+    if (confirm("Alle löschen?")) {
+      meals = [];
+      save();
+      renderMeals();
+    }
+  };
+
+  /* ------------------------------------------------------------ */
+  /* RANDOMIZER                                                   */
+  /* ------------------------------------------------------------ */
   document.getElementById("generate").onclick = () => {
     const days = parseInt(document.getElementById("days").value);
     const planMsg = document.getElementById("planMsg");
@@ -355,25 +519,18 @@
       return;
     }
 
-    // Pflichtkategorien
-    const inputs = [...document.querySelectorAll("#filterFields input")];
     let desired = [];
-
-    inputs.forEach(inp => {
-      const amount = parseInt(inp.value);
-      const tag = inp.dataset.tag;
-      if (amount > 0) {
-        for (let i = 0; i < amount; i++) desired.push(tag);
+    [...document.querySelectorAll("#filterFields input")].forEach(inp => {
+      const v = parseInt(inp.value);
+      if (v > 0) {
+        for (let i = 0; i < v; i++) desired.push(inp.dataset.tag);
       }
     });
 
-    // Resttage auffüllen
     while (desired.length < days) desired.push("RANDOM");
 
-    // Überschuss ignorieren
     desired = desired.slice(0, days);
 
-    // mischen
     desired.sort(() => Math.random() - 0.5);
 
     plan = [];
@@ -393,23 +550,26 @@
     renderPlan();
   };
 
-  /* ============================================================
-     TAGE EINZELN NEU ZIEHEN
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* EINZELNE TAGE NEU ZIEHEN                                     */
+  /* ------------------------------------------------------------ */
   function reroll(i) {
     const tag = plan[i].tag;
+
     let candidates =
       tag === "RANDOM"
         ? meals
         : meals.filter(m => m.tags.includes(tag));
+
     if (!candidates.length) candidates = meals;
+
     plan[i].meal = candidates[Math.floor(Math.random() * candidates.length)];
     renderPlan();
   }
 
-  /* ============================================================
-     PLAN ANZEIGEN
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* PLAN ANZEIGEN                                                */
+  /* ------------------------------------------------------------ */
   function renderPlan() {
     const p = document.getElementById("plan");
     p.innerHTML = "";
@@ -417,6 +577,7 @@
     plan.forEach((item, idx) => {
       const div = document.createElement("div");
       div.className = "day";
+
       div.innerHTML = `<strong>Tag ${idx + 1}</strong><br>`;
 
       if (item.meal.image)
@@ -436,9 +597,9 @@
     });
   }
 
-  /* ============================================================
-     EXPORT
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* EXPORT                                                       */
+  /* ------------------------------------------------------------ */
   document.getElementById("export").onclick = () => {
     if (!plan.length) return;
     html2canvas(document.getElementById("planContainer")).then(canvas => {
@@ -449,9 +610,9 @@
     });
   };
 
-  /* ============================================================
-     ZUKLAPPEN – GERICHTE
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* ZUKLAPPEN – GERICHTE                                         */
+  /* ------------------------------------------------------------ */
   document.getElementById("mealsToggle").onclick = () => {
     const full = document.getElementById("mealsFull");
     const arrow = document.getElementById("mealsArrow");
@@ -465,9 +626,9 @@
     }
   };
 
-  /* ============================================================
-     ZUKLAPPEN – KATEGORIEN
-  ============================================================ */
+  /* ------------------------------------------------------------ */
+  /* ZUKLAPPEN – KATEGORIEN                                       */
+  /* ------------------------------------------------------------ */
   document.getElementById("catToggle").onclick = () => {
     const full = document.getElementById("catFull");
     const arrow = document.getElementById("catArrow");

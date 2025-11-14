@@ -63,6 +63,23 @@
       margin-top: 6px;
     }
 
+    /* Checkbox-Gruppen – FIX */
+    .checkbox-group {
+      margin-top: 6px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
     button {
       width: 100%;
       padding: 11px 14px;
@@ -235,16 +252,13 @@
     <span id="mealsArrow" class="collapse-arrow">►</span>
   </div>
 
-  <!-- kompakte erste Zeile -->
   <div id="mealsCompact"></div>
-
-  <!-- komplette Liste -->
   <div id="mealsFull" class="full-list" style="display:none;"></div>
 
 </div>
 
 <!-- ========================================================== -->
-<!--       KARTE 3: RANDOMIZE NACH KATEGORIEN (ZUKLAPPBAR)       -->
+<!--       KARTE 3: RANDOMIZE NACH KATEGORIEN                   -->
 <!-- ========================================================== -->
 
 <div class="card" id="catCard">
@@ -254,10 +268,8 @@
     <span id="catArrow" class="collapse-arrow">►</span>
   </div>
 
-  <!-- kompakte erste Zeile -->
   <div id="catCompact"></div>
 
-  <!-- komplette Filterliste -->
   <div id="catFull" style="display:none; margin-top:12px;">
     <small>(Leer lassen = komplett zufällig)</small>
     <div id="filterFields" style="margin-top:12px;"></div>
@@ -270,10 +282,8 @@
 <!-- ========================================================== -->
 
 <div class="card">
-
   <h2>Anzahl Tage für Randomizer</h2>
 
-  <!-- Label entfernt, nur das Eingabefeld bleibt -->
   <input id="days" type="number" min="1" value="5">
 
   <button class="primary" id="generate">Randomizer</button>
@@ -284,7 +294,6 @@
   <div id="planContainer">
     <div id="plan" class="plan"></div>
   </div>
-
 </div>
 
 <!-- ========================================================== -->
@@ -294,22 +303,16 @@
 <script>
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
   let plan = [];
-  let editId = null; // merkt sich, welches Gericht bearbeitet wird
+  let editId = null;
 
   const save = () => localStorage.setItem("meals", JSON.stringify(meals));
 
-  /* ------------------------------------------------------------ */
-  /* TAGS SAMMELN                                                 */
-  /* ------------------------------------------------------------ */
   function getAllTags() {
     const tags = new Set();
     meals.forEach(m => m.tags.forEach(t => tags.add(t)));
     return [...tags].sort();
   }
 
-  /* ------------------------------------------------------------ */
-  /* GERICHTE DARSTELLEN                                          */
-  /* ------------------------------------------------------------ */
   function renderMeals() {
     const compact = document.getElementById("mealsCompact");
     const full = document.getElementById("mealsFull");
@@ -364,9 +367,6 @@
     renderFilterFields();
   }
 
-  /* ------------------------------------------------------------ */
-  /* FILTER DARSTELLEN                                            */
-  /* ------------------------------------------------------------ */
   function renderFilterFields() {
     const compact = document.getElementById("catCompact");
     const container = document.getElementById("filterFields");
@@ -393,10 +393,6 @@
     });
   }
 
-  /* ------------------------------------------------------------ */
-  /* GERICHT HINZUFÜGEN / BEARBEITEN                              */
-  /* ------------------------------------------------------------ */
-
   function getChecked(id) {
     return [...document.querySelectorAll(`#${id} input:checked`)].map(c => c.value);
   }
@@ -415,9 +411,7 @@
     const file = document.getElementById("image").files[0];
 
     if (editId) {
-      // UPDATE EXISTIERENDES GERICHT
       const meal = meals.find(m => m.id === editId);
-
       meal.name = name;
       meal.tags = tags;
 
@@ -431,11 +425,9 @@
       } else {
         finishEdit();
       }
-
       return;
     }
 
-    // NEUES GERICHT
     if (file) {
       const reader = new FileReader();
       reader.onload = () => addMeal(name, tags, reader.result);
@@ -473,8 +465,7 @@
         ].includes(t)
       ).join(", ");
 
-    document.getElementById("image").value = "";
-
+    document.getElementById("image")..value = "";
     document.getElementById("add").textContent = "Änderungen speichern";
   }
 
@@ -501,9 +492,6 @@
     }
   };
 
-  /* ------------------------------------------------------------ */
-  /* RANDOMIZER                                                   */
-  /* ------------------------------------------------------------ */
   document.getElementById("generate").onclick = () => {
     const days = parseInt(document.getElementById("days").value);
     const planMsg = document.getElementById("planMsg");
@@ -528,9 +516,7 @@
     });
 
     while (desired.length < days) desired.push("RANDOM");
-
     desired = desired.slice(0, days);
-
     desired.sort(() => Math.random() - 0.5);
 
     plan = [];
@@ -550,9 +536,6 @@
     renderPlan();
   };
 
-  /* ------------------------------------------------------------ */
-  /* EINZELNE TAGE NEU ZIEHEN                                     */
-  /* ------------------------------------------------------------ */
   function reroll(i) {
     const tag = plan[i].tag;
 
@@ -567,9 +550,6 @@
     renderPlan();
   }
 
-  /* ------------------------------------------------------------ */
-  /* PLAN ANZEIGEN                                                */
-  /* ------------------------------------------------------------ */
   function renderPlan() {
     const p = document.getElementById("plan");
     p.innerHTML = "";
@@ -597,9 +577,6 @@
     });
   }
 
-  /* ------------------------------------------------------------ */
-  /* EXPORT                                                       */
-  /* ------------------------------------------------------------ */
   document.getElementById("export").onclick = () => {
     if (!plan.length) return;
     html2canvas(document.getElementById("planContainer")).then(canvas => {
@@ -610,9 +587,6 @@
     });
   };
 
-  /* ------------------------------------------------------------ */
-  /* ZUKLAPPEN – GERICHTE                                         */
-  /* ------------------------------------------------------------ */
   document.getElementById("mealsToggle").onclick = () => {
     const full = document.getElementById("mealsFull");
     const arrow = document.getElementById("mealsArrow");
@@ -626,9 +600,6 @@
     }
   };
 
-  /* ------------------------------------------------------------ */
-  /* ZUKLAPPEN – KATEGORIEN                                       */
-  /* ------------------------------------------------------------ */
   document.getElementById("catToggle").onclick = () => {
     const full = document.getElementById("catFull");
     const arrow = document.getElementById("catArrow");
@@ -642,7 +613,6 @@
     }
   };
 
-  /* INIT */
   renderMeals();
   renderFilterFields();
   renderPlan();

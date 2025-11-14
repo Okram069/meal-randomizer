@@ -50,6 +50,14 @@
       margin-top: 18px;
     }
 
+    /* Form-Blöcke mit Abstand */
+    .form-group {
+      margin-top: 20px;
+    }
+    .form-group.first {
+      margin-top: 0;
+    }
+
     /* Inputs */
     input[type="text"],
     input[type="number"],
@@ -63,7 +71,7 @@
       margin-top: 6px;
     }
 
-    /* Checkbox-Gruppen – FIX */
+    /* Checkbox-Gruppen */
     .checkbox-group {
       margin-top: 6px;
     }
@@ -203,37 +211,49 @@
 <div class="card">
   <h2>Gericht hinzufügen</h2>
 
-  <label>Name</label>
-  <input id="name" type="text">
-
-  <label>Ernährungsform</label>
-  <div class="checkbox-group" id="diet">
-    <label><input type="checkbox" value="Fleisch"> Fleisch</label>
-    <label><input type="checkbox" value="Vegetarisch"> Vegetarisch</label>
-    <label><input type="checkbox" value="Vegan"> Vegan</label>
+  <div class="form-group first">
+    <label>Name</label>
+    <input id="name" type="text">
   </div>
 
-  <label>Aufwand</label>
-  <div class="checkbox-group" id="effort">
-    <label><input type="checkbox" value="Aufwand low"> low</label>
-    <label><input type="checkbox" value="Aufwand medium"> medium</label>
-    <label><input type="checkbox" value="Aufwand high"> high</label>
+  <div class="form-group">
+    <label>Ernährungsform</label>
+    <div class="checkbox-group" id="diet">
+      <label><input type="checkbox" value="Fleisch"> Fleisch</label>
+      <label><input type="checkbox" value="Vegetarisch"> Vegetarisch</label>
+      <label><input type="checkbox" value="Vegan"> Vegan</label>
+    </div>
   </div>
 
-  <label>Nährstoffe</label>
-  <div class="checkbox-group" id="nutri">
-    <label><input type="checkbox" value="High Protein"> High Protein</label>
-    <label><input type="checkbox" value="Low carb"> Low carb</label>
-    <label><input type="checkbox" value="Low fat"> Low fat</label>
-    <label><input type="checkbox" value="Cheat"> Cheat</label>
-    <label><input type="checkbox" value="Healthy"> Healthy</label>
+  <div class="form-group">
+    <label>Aufwand</label>
+    <div class="checkbox-group" id="effort">
+      <label><input type="checkbox" value="Aufwand low"> low</label>
+      <label><input type="checkbox" value="Aufwand medium"> medium</label>
+      <label><input type="checkbox" value="Aufwand high"> high</label>
+    </div>
   </div>
 
-  <label>Eigene Kategorien</label>
-  <input id="custom" type="text" placeholder="z.B. Schnell, Familie">
+  <div class="form-group">
+    <label>Nährstoffe</label>
+    <div class="checkbox-group" id="nutri">
+      <label><input type="checkbox" value="High Protein"> High Protein</label>
+      <label><input type="checkbox" value="Low carb"> Low carb</label>
+      <label><input type="checkbox" value="Low fat"> Low fat</label>
+      <label><input type="checkbox" value="Cheat"> Cheat</label>
+      <label><input type="checkbox" value="Healthy"> Healthy</label>
+    </div>
+  </div>
 
-  <label>Bild</label>
-  <input id="image" type="file" accept="image/*">
+  <div class="form-group">
+    <label>Eigene Kategorien</label>
+    <input id="custom" type="text" placeholder="z.B. Schnell, Familie">
+  </div>
+
+  <div class="form-group">
+    <label>Bild</label>
+    <input id="image" type="file" accept="image/*">
+  </div>
 
   <button class="primary" id="add">Speichern</button>
   <button class="secondary" id="clear">Alle löschen</button>
@@ -465,7 +485,7 @@
         ].includes(t)
       ).join(", ");
 
-    document.getElementById("image")..value = "";
+    document.getElementById("image").value = "";
     document.getElementById("add").textContent = "Änderungen speichern";
   }
 

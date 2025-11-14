@@ -5,7 +5,6 @@
   <title>Meal Randomizer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Manifest -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#2563eb">
   <link rel="icon" href="icon-192.png" type="image/png">
@@ -17,371 +16,39 @@
       --bg: #f3f4f6;
       --card-bg: #ffffff;
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
       --border: #e5e7eb;
-      --text-dark: #111827;
       --radius: 12px;
       --shadow: 0 3px 10px rgba(0,0,0,0.08);
-      --block-space: 18px; /* Einheitlicher Abstand */
+      --spacing: 22px; /* DEUTLICHER Abstand */
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
       padding: 16px;
       background: var(--bg);
-      color: var(--text-dark);
     }
 
-    h1 {
-      margin: 0 0 12px 0;
-      font-size: 28px;
-      font-weight: 700;
-    }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 14px; }
 
     .card {
       background: var(--card-bg);
       padding: 18px;
       border-radius: var(--radius);
-      margin-top: 16px;
+      margin-top: 18px;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
     }
 
-    input, button {
-      padding: 12px;
-      font-size: 16px;
-      width: 100%;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      margin-top: 6px;
-      margin-bottom: 12px;
-    }
-
-    button {
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .primary {
-      background: var(--primary);
-      border: none;
-      color: white;
-    }
-    .primary:hover { background: var(--primary-hover); }
-
-    .secondary {
-      background: #e5e7eb;
-      border: none;
-    }
-
-    .danger {
-      background: #dc2626;
-      color: white;
-      width: auto;
-      padding: 6px 12px;
-      font-size: 14px;
-    }
-
-    /* EINHEITLICHE ABSTÄNDE */
-    .block {
-      margin-top: var(--block-space);
+    /* MODERNE ABSTANDSREGEL */
+    .group {
+      margin-top: var(--spacing);
     }
 
     .checkbox-group label {
       display: flex;
       align-items: center;
-      font-size: 15px;
       padding: 4px 0;
+      font-size: 15px;
     }
 
-    .checkbox-group input {
-      width: auto;
-      margin-right: 10px;
-      margin-bottom: 0;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 4px 8px;
-      margin: 3px 3px 0 0;
-      font-size: 12px;
-      background: #e5e7eb;
-      border-radius: var(--radius);
-    }
-
-    .plan {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      margin-top: 16px;
-    }
-
-    .day {
-      background: var(--card-bg);
-      padding: 14px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-
-    .day img {
-      width: 100%;
-      height: 140px;
-      object-fit: cover;
-      border-radius: var(--radius);
-      margin: 10px 0;
-    }
-  </style>
-</head>
-
-<body>
-
-<h1>Meal Randomizer</h1>
-
-<!-- ADD MEAL -->
-<div class="card">
-  <h2>Gericht hinzufügen</h2>
-
-  <label>Name</label>
-  <input id="name" type="text">
-
-  <label class="block">Ernährungsform</label>
-  <div class="checkbox-group" id="diet">
-    <label><input type="checkbox" value="Fleisch"> Fleisch</label>
-    <label><input type="checkbox" value="Vegetarisch"> Vegetarisch</label>
-    <label><input type="checkbox" value="Vegan"> Vegan</label>
-  </div>
-
-  <label class="block">Aufwand</label>
-  <div class="checkbox-group" id="effort">
-    <label><input type="checkbox" value="Aufwand low"> low</label>
-    <label><input type="checkbox" value="Aufwand medium"> medium</label>
-    <label><input type="checkbox" value="Aufwand high"> high</label>
-  </div>
-
-  <label class="block">Nährstoffe</label>
-  <div class="checkbox-group" id="nutri">
-    <label><input type="checkbox" value="High Protein"> High Protein</label>
-    <label><input type="checkbox" value="Low carb"> Low carb</label>
-    <label><input type="checkbox" value="Low fat"> Low fat</label>
-    <label><input type="checkbox" value="Cheat"> Cheat</label>
-    <label><input type="checkbox" value="Healthy"> Healthy</label>
-  </div>
-
-  <label class="block">Eigene Kategorien</label>
-  <input id="custom" type="text" placeholder="z.B. Schnell, Familie">
-
-  <label class="block">Bild</label>
-  <input id="image" type="file" accept="image/*">
-
-  <button class="primary" id="add">Speichern</button>
-  <button class="secondary" id="clear">Alle löschen</button>
-
-  <p id="msg" style="font-size:13px;color:green;"></p>
-</div>
-
-<!-- MEAL LIST -->
-<div class="card">
-  <h2>Gespeicherte Gerichte (<span id="count">0</span>)</h2>
-  <div id="list" class="meal-list"></div>
-</div>
-
-<!-- RANDOMIZER -->
-<div class="card">
-  <h2>Wochenplan</h2>
-
-  <label>Anzahl Tage</label>
-  <input id="days" type="number" min="1" value="5">
-
-  <button class="primary" id="generate">Randomizer</button>
-  <button class="secondary" id="export">Export als Bild</button>
-
-  <p id="planMsg" style="font-size:13px;color:red;"></p>
-
-  <div id="planContainer">
-    <div id="plan" class="plan"></div>
-  </div>
-</div>
-
-<script>
-  const key = "meals";
-  let meals = JSON.parse(localStorage.getItem(key) || "[]");
-  let plan = [];
-
-  const id = () => crypto.randomUUID();
-
-  function save() {
-    localStorage.setItem(key, JSON.stringify(meals));
-  }
-
-  function renderMeals() {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-    document.getElementById("count").textContent = meals.length;
-
-    meals.forEach(m => {
-      const row = document.createElement("div");
-      row.className = "row";
-
-      const left = document.createElement("div");
-      left.innerHTML = `<strong>${m.name}</strong><br>${m.tags.map(t => `<span class="tag">${t}</span>`).join("")}`;
-
-      const del = document.createElement("button");
-      del.textContent = "X";
-      del.className = "danger";
-      del.onclick = () => {
-        meals = meals.filter(x => x.id !== m.id);
-        save();
-        renderMeals();
-        renderPlan();
-      };
-
-      row.appendChild(left);
-      row.appendChild(del);
-      list.appendChild(row);
-    });
-  }
-
-  function getChecked(id) {
-    return [...document.getElementById(id).querySelectorAll("input:checked")].map(c => c.value);
-  }
-
-  document.getElementById("add").onclick = () => {
-    const name = document.getElementById("name").value.trim();
-    if (!name) return alert("Name fehlt.");
-
-    const tags = [
-      ...getChecked("diet"),
-      ...getChecked("effort"),
-      ...getChecked("nutri"),
-      ...document.getElementById("custom").value.split(",").map(x => x.trim()).filter(x => x)
-    ];
-
-    const file = document.getElementById("image").files[0];
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => addMeal(name, tags, reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      addMeal(name, tags, null);
-    }
-  };
-
-  function addMeal(name, tags, img) {
-    meals.push({ id: id(), name, tags, image: img });
-    save();
-    renderMeals();
-
-    document.getElementById("name").value = "";
-    document.getElementById("custom").value = "";
-    document.getElementById("image").value = "";
-    document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
-
-    const msg = document.getElementById("msg");
-    msg.textContent = "Gericht gespeichert.";
-    setTimeout(() => { msg.textContent = ""; }, 2000);
-  }
-
-  document.getElementById("clear").onclick = () => {
-    if (confirm("Alle löschen?")) {
-      meals = [];
-      save();
-      renderMeals();
-      plan = [];
-      renderPlan();
-
-      const msg = document.getElementById("msg");
-      msg.textContent = "Alle Gerichte gelöscht.";
-      setTimeout(() => { msg.textContent = ""; }, 2000);
-    }
-  };
-
-  document.getElementById("generate").onclick = () => {
-    const d = parseInt(document.getElementById("days").value);
-    const planMsg = document.getElementById("planMsg");
-
-    if (!d || d < 1) {
-      planMsg.textContent = "Bitte eine gültige Anzahl Tage eingeben.";
-      return;
-    }
-
-    if (!meals.length) {
-      planMsg.textContent = "Bitte zuerst mindestens ein Gericht speichern.";
-      return;
-    }
-
-    planMsg.textContent = "";
-
-    plan = [];
-    let pool = [...meals];
-
-    for (let i = 1; i <= d; i++) {
-      if (pool.length === 0) pool = [...meals];
-      const m = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-      plan.push({ day: i, meal: m });
-    }
-
-    renderPlan();
-  };
-
-  function renderPlan() {
-    const p = document.getElementById("plan");
-    p.innerHTML = "";
-
-    plan.forEach((item, idx) => {
-      const div = document.createElement("div");
-      div.className = "day";
-
-      div.innerHTML = `<strong>Tag ${item.day}</strong><br>`;
-
-      if (item.meal.image)
-        div.innerHTML += `<img src="${item.meal.image}">`;
-
-      div.innerHTML += `<div>${item.meal.name}</div>`;
-      div.innerHTML += item.meal.tags.map(t => `<span class='tag'>${t}</span>`).join("");
-
-      const btn = document.createElement("button");
-      btn.className = "secondary";
-      btn.style.marginTop = "10px";
-      btn.textContent = "Neu ziehen";
-      btn.onclick = () => reroll(idx);
-
-      div.appendChild(btn);
-      p.appendChild(div);
-    });
-  }
-
-  function reroll(i) {
-    const used = plan.filter((_, x) => x !== i).map(p => p.meal.id);
-    const cand = meals.filter(m => !used.includes(m.id));
-    const pick = cand.length ? cand : meals;
-    plan[i].meal = pick[Math.floor(Math.random() * pick.length)];
-    renderPlan();
-  }
-
-  document.getElementById("export").onclick = () => {
-    if (!plan.length) return;
-    html2canvas(document.getElementById("planContainer")).then(canvas => {
-      const a = document.createElement("a");
-      a.download = "meal-plan.png";
-      a.href = canvas.toDataURL();
-      a.click();
-    });
-  };
-
-  renderMeals();
-  renderPlan();
-</script>
-
-</body>
-</html>
+    .checkbo

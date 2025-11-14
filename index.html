@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meal Randomizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    body { font-family: Arial; margin: 0; padding: 16px; background: #f5f5f5; }
+    h1 { margin-bottom: 4px; }
+    .card { background: #fff; padding: 16px; border-radius: 8px; margin-top: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    input, button { padding: 8px; font-size: 15px; }
+    input[type="text"], input[type="number"] { width: 100%; margin-top: 4px; margin-bottom: 8px; }
+    .checkbox-group label { display: block; font-size: 14px; margin-bottom: 4px; }
+    button { cursor: pointer; border: none; border-radius: 4px; }
+    .primary { background: #2563eb; color: white; }
+    .secondary { background: #ddd; }
+    .danger { background: #dc2626; color: white; }
+    .meal-list { max-height: 240px; overflow-y: auto; margin-top: 8px; }
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #eee; }
+    .tag { display: inline-block; padding: 2px 6px; margin: 1px; font-size: 11px; background: #e5e7eb; border-radius: 4px; }
+    .plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
+    .day { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .day img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin: 6px 0; }
+  </style>
+</head>
+
+<body>
+
+<h1>Meal Randomizer</h1>
+
+<!-- ADD MEAL -->
+<div class="card">
+  <h2>Gericht hinzufügen</h2>
+
+  <label>Name</label>
+  <input id="name" type="text">
+
+  <label>Ernährungsform</label>
+  <div class="checkbox-group" id="diet">
+    <label><input type="checkbox" value="Fleisch"> Fleisch</label>
+    <label><input type="checkbox" value="Vegetarisch"> Vegetarisch</label>
+    <label><input type="checkbox" value="Vegan"> Vegan</label>
+  </div>
+
+  <label>Aufwand</label>
+  <div class="checkbox-group" id="effort">
+    <label><input type="checkbox" value="Aufwand low"> low</label>
+    <label><input type="checkbox" value="Aufwand medium"> medium</label>
+    <label><input type="checkbox" value="Aufwand high"> high</label>
+  </div>
+
+  <label>Nährstoffe</label>
+  <div class="checkbox-group" id="nutri">
+    <label><input type="checkbox" value="High Protein"> High Protein</label>
+    <label><input type="checkbox" value="Low carb"> Low carb</label>
+    <label><input type="checkbox" value="Low fat"> Low fat</label>
+    <label><input type="checkbox" value="Cheat"> Cheat</label>
+    <label><input type="checkbox" value="Healthy"> Healthy</label>
+  </div>
+
+  <label>Eigene Kategorien (comma)</label>
+  <input id="custom" type="text" placeholder="z.B. Schnell, Familie">
+
+  <label>Bild</label>
+  <input id="image" type="file" accept="image/*">
+
+  <button class="primary" id="add">Speichern</button>
+  <button class="secondary" id="clear">Alle löschen</button>
+
+  <p id="msg" style="font-size:13px;color:green;"></p>
+</div>
+
+<!-- MEAL LIST -->
+<div class="card">
+  <h2>Gespeicherte Gerichte (<span id="count">0</span>)</h2>
+  <div id="list" class="meal-list"></div>
+</div>
+
+<!-- RANDOMIZER -->
+<div class="card">
+  <h2>Wochenplan</h2>
+
+  <label>Anzahl Tage</label>
+  <input id="days" type="number" min="1" value="5">
+
+  <button class="primary" id="generate">Randomizer</button>
+  <button class="secondary" id="export">Export als Bild</button>
+
+  <p id="planMsg" style="font-size:13px;color:red;"></p>
+
+  <div id="planContainer">
+    <div id="plan" class="plan"></div>
+  </div>
+</div>
+
+<script>
+  const key = "meals";
+  let meals = JSON.parse(localStorage.getItem(key) || "[]");
+  let plan = [];
+
+  const id = () => crypto.randomUUID();
+
+  function save() {
+    localStorage.setItem(key, JSON.stringify(meals));
+  }
+
+  function renderMeals() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+    document.getElementById("count").textContent = meals.length;
+
+    meals.forEach(m => {
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const left = document.createElement("div");
+      left.innerHTML = `<strong>${m.name}</strong><br>${m.tags.map(t => `<span class="tag">${t}</span>`).join("")}`;
+
+      const del = document.createElement("button");
+      del.textContent = "X";
+      del.className = "danger";
+      del.onclick = () => {
+        meals = meals.filter(x => x.id !== m.id);
+        save();
+        renderMeals();
+        renderPlan();
+      };
+
+      row.appendChild(left);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function getChecked(id) {
+    return [...document.getElementById(id).querySelectorAll("input:checked")].map(c => c.value);
+  }
+
+  document.getElementById("add").onclick = () => {
+    const name = document.getElementById("name").value.trim();
+    if (!name) return alert("Name fehlt.");
+
+    const tags = [
+      ...getChecked("diet"),
+      ...getChecked("effort"),
+      ...getChecked("nutri"),
+      ...document.getElementById("custom").value.split(",").map(x => x.trim()).filter(x => x)
+    ];
+
+    const file = document.getElementById("image").files[0];
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => addMeal(name, tags, reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      addMeal(name, tags, null);
+    }
+  };
+
+  function addMeal(name, tags, img) {
+    meals.push({ id: id(), name, tags, image: img });
+    save();
+    renderMeals();
+
+    document.getElementById("name").value = "";
+    document.getElementById("custom").value = "";
+    document.getElementById("image").value = "";
+    document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+  }
+
+  document.getElementById("clear").onclick = () => {
+    if (confirm("Alle löschen?")) {
+      meals = [];
+      save();
+      renderMeals();
+      plan = [];
+      renderPlan();
+    }
+  };
+
+  document.getElementById("generate").onclick = () => {
+    const d = parseInt(document.getElementById("days").value);
+    if (!d || d < 1) return;
+
+    plan = [];
+    let pool = [...meals];
+
+    for (let i = 1; i <= d; i++) {
+      if (pool.length === 0) pool = [...meals];
+      const m = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      plan.push({ day: i, meal: m });
+    }
+
+    renderPlan();
+  };
+
+  function renderPlan() {
+    const p = document.getElementById("plan");
+    p.innerHTML = "";
+
+    plan.forEach((item, idx) => {
+      const div = document.createElement("div");
+      div.className = "day";
+
+      div.innerHTML = `<strong>Tag ${item.day}</strong><br>`;
+
+      if (item.meal.image)
+        div.innerHTML += `<img src="${item.meal.image}">`;
+
+      div.innerHTML += `<div>${item.meal.name}</div>`;
+      div.innerHTML += item.meal.tags.map(t => `<span class='tag'>${t}</span>`).join("");
+
+      const btn = document.createElement("button");
+      btn.className = "secondary";
+      btn.style.marginTop = "6px";
+      btn.textContent = "Neu ziehen";
+      btn.onclick = () => reroll(idx);
+
+      div.appendChild(btn);
+      p.appendChild(div);
+    });
+  }
+
+  function reroll(i) {
+    const used = plan.filter((_, x) => x !== i).map(p => p.meal.id);
+    const cand = meals.filter(m => !used.includes(m.id));
+    const pick = cand.length ? cand : meals;
+    plan[i].meal = pick[Math.floor(Math.random() * pick.length)];
+    renderPlan();
+  }
+
+  document.getElementById("export").onclick = () => {
+    if (!plan.length) return;
+    html2canvas(document.getElementById("planContainer")).then(canvas => {
+      const a = document.createElement("a");
+      a.download = "meal-plan.png";
+      a.href = canvas.toDataURL();
+      a.click();
+    });
+  };
+
+  renderMeals();
+  renderPlan();
+</script>
+
+</body>
+</html>

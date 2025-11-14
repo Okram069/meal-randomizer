@@ -13,22 +13,128 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
-    body { font-family: Arial; margin: 0; padding: 16px; background: #f5f5f5; }
-    h1 { margin-bottom: 4px; }
-    .card { background: #fff; padding: 16px; border-radius: 8px; margin-top: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    input, button { padding: 8px; font-size: 15px; }
-    input[type="text"], input[type="number"] { width: 100%; margin-top: 4px; margin-bottom: 8px; }
-    .checkbox-group label { display: block; font-size: 14px; margin-bottom: 4px; }
-    button { cursor: pointer; border: none; border-radius: 4px; }
-    .primary { background: #2563eb; color: white; }
-    .secondary { background: #ddd; }
-    .danger { background: #dc2626; color: white; }
-    .meal-list { max-height: 240px; overflow-y: auto; margin-top: 8px; }
-    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #eee; }
-    .tag { display: inline-block; padding: 2px 6px; margin: 1px; font-size: 11px; background: #e5e7eb; border-radius: 4px; }
-    .plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
-    .day { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .day img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin: 6px 0; }
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #e5e7eb;
+      --text-dark: #111827;
+      --text-light: #6b7280;
+      --radius: 12px;
+      --shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text-dark);
+    }
+
+    h1 {
+      margin: 0 0 12px 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: var(--radius);
+      margin-top: 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    input, button {
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .primary {
+      background: var(--primary);
+      border: none;
+      color: white;
+    }
+    .primary:hover { background: var(--primary-hover); }
+
+    .secondary {
+      background: #e5e7eb;
+      border: none;
+    }
+
+    .danger {
+      background: #dc2626;
+      color: white;
+      width: auto;
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-size: 15px;
+      padding: 4px 0;
+    }
+
+    .checkbox-group input {
+      width: auto;
+      margin-right: 10px;
+      margin-bottom: 0;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      margin: 3px 3px 0 0;
+      font-size: 12px;
+      background: #e5e7eb;
+      border-radius: var(--radius);
+    }
+
+    .plan {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    .day {
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .day img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      margin: 10px 0;
+    }
   </style>
 </head>
 
@@ -155,124 +261,4 @@
       ...document.getElementById("custom").value.split(",").map(x => x.trim()).filter(x => x)
     ];
 
-    const file = document.getElementById("image").files[0];
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => addMeal(name, tags, reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      addMeal(name, tags, null);
-    }
-  };
-
-  function addMeal(name, tags, img) {
-    meals.push({ id: id(), name, tags, image: img });
-    save();
-    renderMeals();
-
-    // Felder zurücksetzen
-    document.getElementById("name").value = "";
-    document.getElementById("custom").value = "";
-    document.getElementById("image").value = "";
-    document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
-
-    // Bestätigung anzeigen
-    const msg = document.getElementById("msg");
-    msg.textContent = "Gericht gespeichert.";
-    setTimeout(() => { msg.textContent = ""; }, 2000);
-  }
-
-  document.getElementById("clear").onclick = () => {
-    if (confirm("Alle löschen?")) {
-      meals = [];
-      save();
-      renderMeals();
-      plan = [];
-      renderPlan();
-
-      const msg = document.getElementById("msg");
-      msg.textContent = "Alle Gerichte gelöscht.";
-      setTimeout(() => { msg.textContent = ""; }, 2000);
-    }
-  };
-
-  document.getElementById("generate").onclick = () => {
-    const d = parseInt(document.getElementById("days").value);
-    const planMsg = document.getElementById("planMsg");
-
-    if (!d || d < 1) {
-      planMsg.textContent = "Bitte eine gültige Anzahl Tage eingeben.";
-      return;
-    }
-
-    if (!meals.length) {
-      planMsg.textContent = "Bitte zuerst mindestens ein Gericht speichern.";
-      return;
-    }
-
-    planMsg.textContent = "";
-
-    plan = [];
-    let pool = [...meals];
-
-    for (let i = 1; i <= d; i++) {
-      if (pool.length === 0) pool = [...meals];
-      const m = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-      plan.push({ day: i, meal: m });
-    }
-
-    renderPlan();
-  };
-
-  function renderPlan() {
-    const p = document.getElementById("plan");
-    p.innerHTML = "";
-
-    plan.forEach((item, idx) => {
-      const div = document.createElement("div");
-      div.className = "day";
-
-      div.innerHTML = `<strong>Tag ${item.day}</strong><br>`;
-
-      if (item.meal.image)
-        div.innerHTML += `<img src="${item.meal.image}">`;
-
-      div.innerHTML += `<div>${item.meal.name}</div>`;
-      div.innerHTML += item.meal.tags.map(t => `<span class='tag'>${t}</span>`).join("");
-
-      const btn = document.createElement("button");
-      btn.className = "secondary";
-      btn.style.marginTop = "6px";
-      btn.textContent = "Neu ziehen";
-      btn.onclick = () => reroll(idx);
-
-      div.appendChild(btn);
-      p.appendChild(div);
-    });
-  }
-
-  function reroll(i) {
-    const used = plan.filter((_, x) => x !== i).map(p => p.meal.id);
-    const cand = meals.filter(m => !used.includes(m.id));
-    const pick = cand.length ? cand : meals;
-    plan[i].meal = pick[Math.floor(Math.random() * pick.length)];
-    renderPlan();
-  }
-
-  document.getElementById("export").onclick = () => {
-    if (!plan.length) return;
-    html2canvas(document.getElementById("planContainer")).then(canvas => {
-      const a = document.createElement("a");
-      a.download = "meal-plan.png";
-      a.href = canvas.toDataURL();
-      a.click();
-    });
-  };
-
-  renderMeals();
-  renderPlan();
-</script>
-
-</body>
-</html>
+    const file = document.getElementById("image").files

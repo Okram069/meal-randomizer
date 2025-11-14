@@ -794,19 +794,6 @@
 
     const STORAGE_KEY = "mealRandomizerMeals";
     const PIXABAY_KEY = "15858029-c9fd5984fbdea17766bf36343";
-// Simple in-memory cache for suggested images to reduce repeated API calls
-const imageCache = new Map();
-
-function getCachedImage(name) {
-  if (!name) return null;
-  return imageCache.get(name.toLowerCase()) || null;
-}
-
-function setCachedImage(name, url) {
-  if (!name || !url) return;
-  imageCache.set(name.toLowerCase(), url);
-}
-
 
     let meals = [];
     let tempMeal = null;
@@ -857,28 +844,6 @@ function setCachedImage(name, url) {
       return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
     }
 
-
-    // Generic helper to wire an <input type="file"> to a preview/placeholder pair
-    function attachImageUploadHandler(inputEl, previewEl, placeholderEl) {
-      if (!inputEl) return;
-      inputEl.addEventListener("change", () => {
-        const file = inputEl.files[0];
-        if (!file) {
-          previewEl.style.display = "none";
-          placeholderEl.style.display = "block";
-          delete previewEl.dataset.src;
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          previewEl.src = reader.result;
-          previewEl.dataset.src = reader.result;
-          previewEl.style.display = "block";
-          placeholderEl.style.display = "none";
-        };
-        reader.readAsDataURL(file);
-      });
-    }
     async function fetchPixabayImageUrl(name) {
       const query = encodeURIComponent((name || "meal") + " food dish plate");
       const url = `https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${query}&image_type=photo&per_page=3&safesearch=true`;
@@ -900,30 +865,11 @@ function setCachedImage(name, url) {
       containerEl.innerHTML = '<div class="image-box-placeholder">Loading suggestion...</div>';
       boxEl.classList.remove("selected");
 
-      // Try cached image first
-      const cached = getCachedImage(name);
-      if (cached) {
-        const img = document.createElement("img");
-        img.className = "image-preview";
-        img.alt = name || "Suggested meal";
-        img.src = cached;
-        if (cached && cached.startsWith("http")) {
-          img.crossOrigin = "anonymous";
-        }
-        containerEl.innerHTML = "";
-        containerEl.appendChild(img);
-        boxEl.classList.add("selected");
-        return;
-      }
-
       const pixabayUrl = await fetchPixabayImageUrl(name);
       let finalUrl = pixabayUrl;
       if (!finalUrl) {
         finalUrl = getLocalGeneratedImageDataUrl(name);
       }
-
-      // cache final URL for this name
-      setCachedImage(name, finalUrl);
 
       const img = document.createElement("img");
       img.className = "image-preview";
@@ -1075,6 +1021,25 @@ function setCachedImage(name, url) {
       $("suggestedImageBox").classList.toggle("selected");
     });
 
+    $("uploadImageInput").addEventListener("change", () => {
+      const file = $("uploadImageInput").files[0];
+      const prev = $("uploadImagePreview");
+      const ph = $("uploadImagePlaceholder");
+      if (!file) {
+        prev.style.display = "none";
+        ph.style.display = "block";
+        delete prev.dataset.src;
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        prev.src = reader.result;
+        prev.dataset.src = reader.result;
+        prev.style.display = "block";
+        ph.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
 
     $("addFlowPrimaryBtn").addEventListener("click", () => {
       if (!tempMeal) { closeModal($("addFlowModal")); return; }
@@ -1182,6 +1147,25 @@ function setCachedImage(name, url) {
       $("editSuggestedImageBox").classList.toggle("selected");
     });
 
+    $("editUploadImageInput").addEventListener("change", () => {
+      const file = $("editUploadImageInput").files[0];
+      const prev = $("editUploadImagePreview");
+      const ph = $("editUploadImagePlaceholder");
+      if (!file) {
+        prev.style.display = "none";
+        ph.style.display = "block";
+        delete prev.dataset.src;
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        prev.src = reader.result;
+        prev.dataset.src = reader.result;
+        prev.style.display = "block";
+        ph.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
 
     function readEditForm() {
       const name = $("editMealNameInput").value.trim();
@@ -1421,18 +1405,6 @@ function setCachedImage(name, url) {
         }
       }
     });
-
-    // Wire upload inputs to shared handler
-    attachImageUploadHandler(
-      $("uploadImageInput"),
-      $("uploadImagePreview"),
-      $("uploadImagePlaceholder")
-    );
-    attachImageUploadHandler(
-      $("editUploadImageInput"),
-      $("editUploadImagePreview"),
-      $("editUploadImagePlaceholder")
-    );
 
     loadMeals();
     renderMeals();

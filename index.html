@@ -1,39 +1,1320 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Meal Randomizer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <style>
     :root {
       --bg: #f3f4f6;
       --card-bg: #ffffff;
       --primary: #2563eb;
+      --primary-hover: #1d4ed8;
       --border: #e5e7eb;
       --text: #111827;
-      --radius: 12px;
-      --shadow: 0 3px 10px rgba(0,0,0,0.06);
+      --muted: #6b7280;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow-soft: 0 10px 35px rgba(0,0,0,0.08);
+      --shadow-card: 0 3px 10px rgba(0,0,0,0.06);
+      --sidebar-width: 320px;
     }
+
+    * { box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
-      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      max-width: 900px;
-      margin-inline: auto;
     }
 
-    h1 {
-      font-size: 28px;
-      margin-bottom: 14px;
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #fff;
+      padding: 24px;
+      box-shadow: 2px 0 20px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .sidebar-header span {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .meal-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .meal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .meal-info {
+      flex: 1;
+      margin-right: 12px;
+      font-size: 15px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .meal-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.15s ease, transform 0.08s ease;
+    }
+
+    .icon-btn:active { transform: scale(0.96); }
+
+    .icon-edit {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .icon-edit:hover { background: #d1d5db; }
+
+    .icon-delete {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .icon-delete:hover { background: var(--danger-hover); }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sidebar-empty {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      padding: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 26px;
       font-weight: 700;
     }
 
+    .menu-btn {
+      display: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: #e5e7eb;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .menu-btn svg { width: 18px; height: 18px; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      padding: 18px 18px 20px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      margin-top: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      font-size: 15px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .danger-btn {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 15px;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 8px;
+      transition: background 0.15s ease, transform 0.08s ease;
+    }
+
+    .primary-btn {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .primary-btn:hover { background: var(--primary-hover); }
+
+    .secondary-btn {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .secondary-btn:hover { background: #d1d5db; }
+
+    .danger-btn {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .danger-btn:hover { background: var(--danger-hover); }
+
+    .primary-btn:active,
+    .secondary-btn:active,
+    .danger-btn:active {
+      transform: scale(0.97);
+    }
+
+    .helper-text {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .error-text {
+      font-size: 13px;
+      color: #b91c1c;
+      min-height: 16px;
+      margin-top: 4px;
+    }
+
+    /* MODALS */
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+      z-index: 40;
+    }
+
+    .backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      z-index: 50;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-panel {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 22px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .close-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .close-circle svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    .modal-footer {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: #111827;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .segmented {
+      display: inline-flex;
+      background: #e5e7eb;
+      border-radius: 9999px;
+      padding: 2px;
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+
+    .segmented button {
+      border: none;
+      background: transparent;
+      border-radius: 9999px;
+      padding: 5px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #374151;
+    }
+
+    .segmented button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .small-input {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+
+    .wizard-container {
+      overflow: hidden;
+    }
+
+    .wizard-steps {
+      display: flex;
+      width: 200%;
+      transform: translateX(0);
+      transition: transform 0.28s ease;
+    }
+
+    .wizard-step {
+      width: 50%;
+      padding-right: 12px;
+    }
+
+    .wizard-step:nth-child(2) {
+      padding-left: 12px;
+      padding-right: 0;
+    }
+
+    .image-box {
+      border-radius: 16px;
+      padding: 10px;
+      background: #f9fafb;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .image-box.selected {
+      border-color: var(--primary);
+    }
+
+    .image-box-placeholder {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .image-preview {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-top: 6px;
+    }
+
+    .tiny-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Weekly plan */
+
+    .plan-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .plan-card {
+      background: #f9fafb;
+      border-radius: 16px;
+      padding: 10px 12px;
+    }
+
+    .plan-card-day {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .plan-card-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .plan-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 6px;
+    }
+
+    .small-primary {
+      width: 100%;
+      border-radius: 9999px;
+      padding: 9px 10px;
+      font-size: 14px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .small-primary:hover { background: var(--primary-hover); }
+
+    .confirm-text {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .confirm-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Sidebar mobile */
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 9;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .menu-btn {
+        display: flex;
+      }
+      .sidebar-backdrop.active {
+        display: block;
+      }
+    }
+
+    @media (min-width: 901px) {
+      .menu-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Saved meals</h2>
+        <span>(<span id="mealCount">0</span>)</span>
+      </div>
+      <div id="mealList" class="meal-list"></div>
+      <div id="sidebarEmpty" class="sidebar-empty" style="display:none;">
+        No meals yet. Add your first meal on the right.
+      </div>
+    </aside>
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="app-header">
+        <button id="menuBtn" class="menu-btn" aria-label="Open sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <h1>Meal Randomizer</h1>
+      </header>
+
+      <!-- Add meal card -->
+      <section class="card">
+        <h2>Add meal</h2>
+        <label for="mealNameInput">Meal name</label>
+        <input id="mealNameInput" type="text" placeholder="e.g. Chicken curry" />
+        <button id="addMealBtn" class="primary-btn">Save</button>
+        <div class="helper-text">
+          After saving the name you can optionally add categories and an image, or skip both.
+        </div>
+      </section>
+
+      <!-- Randomizer card -->
+      <section class="card">
+        <h2>Weekly plan</h2>
+        <label for="daysInput">Number of days</label>
+        <input id="daysInput" type="number" min="1" value="5" />
+        <button id="startRandomizerBtn" class="primary-btn">Start randomizer</button>
+        <div id="randomizerError" class="error-text"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared backdrop for all modals -->
+  <div id="backdrop" class="backdrop"></div>
+
+  <!-- Add-flow modal (categories + image, 2 steps) -->
+  <div id="addFlowModal" class="modal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3 id="addFlowTitle">Select categories</h3>
+        <button class="close-circle" id="closeAddFlowBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="6" y1="18" x2="18" y2="6"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body wizard-container">
+        <div id="addWizardSteps" class="wizard-steps">
+          <!-- Step 1: categories -->
+          <div class="wizard-step" id="addStepCategories">
+            <div class="section-label">Dietary preference</div>
+            <div class="checkbox-group" id="dietGroup">
+              <label><input type="checkbox" value="meat"> Meat</label>
+              <label><input type="checkbox" value="vegetarian"> Vegetarian</label>
+              <label><input type="checkbox" value="vegan"> Vegan</label>
+              <label><input type="checkbox" value="fish"> Fish</label>
+            </div>
+
+            <div class="section-label">Effort</div>
+            <div class="segmented" id="effortSegment">
+              <button data-value="easy">Easy</button>
+              <button data-value="medium">Medium</button>
+              <button data-value="hard">Hard</button>
+            </div>
+
+            <div class="section-label">Nutrition</div>
+            <div class="checkbox-group" id="nutritionGroup">
+              <label><input type="checkbox" value="high_protein"> High protein</label>
+              <label><input type="checkbox" value="low_carb"> Low carb</label>
+              <label><input type="checkbox" value="low_fat"> Low fat</label>
+              <label><input type="checkbox" value="cheat_meal"> Cheat meal</label>
+              <label><input type="checkbox" value="healthy"> Healthy</label>
+            </div>
+
+            <div class="section-label">Add custom categories</div>
+            <input id="customCategoriesInput" class="small-input" type="text"
+                   placeholder="e.g. Quick, Family, Guests" />
+          </div>
+
+          <!-- Step 2: image -->
+          <div class="wizard-step" id="addStepImage">
+            <div class="section-label">Suggested image</div>
+            <div id="suggestedImageBox" class="image-box">
+              <div id="suggestedImageContainer">
+                <div class="image-box-placeholder">
+                  No suggestion yet.
+                </div>
+              </div>
+              <div class="tiny-note">
+                Suggested based on the meal name.
+              </div>
+            </div>
+
+            <div class="section-label">Upload image</div>
+            <div class="image-box" id="uploadImageBox" style="cursor:default;">
+              <input id="uploadImageInput" type="file" accept="image/*" />
+              <img id="uploadImagePreview" class="image-preview" style="display:none;" alt="Uploaded preview" />
+              <div id="uploadImagePlaceholder" class="image-box-placeholder">
+                Choose an image from your device.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="addFlowPrimaryBtn" class="primary-btn">Save</button>
+        <button id="addFlowSecondaryBtn" class="secondary-btn">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit-meal modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>Edit meal</h3>
+        <button class="close-circle" id="closeEditModalBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="6" y1="18" x2="18" y2="6"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="section-label">Meal name</div>
+        <input id="editMealNameInput" class="small-input" type="text" />
+
+        <div class="section-label">Dietary preference</div>
+        <div class="checkbox-group" id="editDietGroup">
+          <label><input type="checkbox" value="meat"> Meat</label>
+          <label><input type="checkbox" value="vegetarian"> Vegetarian</label>
+          <label><input type="checkbox" value="vegan"> Vegan</label>
+          <label><input type="checkbox" value="fish"> Fish</label>
+        </div>
+
+        <div class="section-label">Effort</div>
+        <div class="segmented" id="editEffortSegment">
+          <button data-value="easy">Easy</button>
+          <button data-value="medium">Medium</button>
+          <button data-value="hard">Hard</button>
+        </div>
+
+        <div class="section-label">Nutrition</div>
+        <div class="checkbox-group" id="editNutritionGroup">
+          <label><input type="checkbox" value="high_protein"> High protein</label>
+          <label><input type="checkbox" value="low_carb"> Low carb</label>
+          <label><input type="checkbox" value="low_fat"> Low fat</label>
+          <label><input type="checkbox" value="cheat_meal"> Cheat meal</label>
+          <label><input type="checkbox" value="healthy"> Healthy</label>
+        </div>
+
+        <div class="section-label">Add custom categories</div>
+        <input id="editCustomCategoriesInput" class="small-input" type="text" />
+
+        <div class="section-label">Meal image</div>
+        <div id="editSuggestedImageBox" class="image-box">
+          <div id="editSuggestedImageContainer">
+            <div class="image-box-placeholder">
+              No suggestion yet.
+            </div>
+          </div>
+          <div class="tiny-note">
+            Suggested based on current meal name.
+          </div>
+        </div>
+
+        <div class="section-label">Upload image</div>
+        <div class="image-box" id="editUploadImageBox" style="cursor:default;">
+          <input id="editUploadImageInput" type="file" accept="image/*" />
+          <img id="editUploadImagePreview" class="image-preview" style="display:none;" alt="Uploaded preview" />
+          <div id="editUploadImagePlaceholder" class="image-box-placeholder">
+            Choose an image from your device.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="editSaveBtn" class="primary-btn">Save</button>
+        <button id="editCloseBtn" class="secondary-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete-confirm modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>Delete meal</h3>
+        <button class="close-circle" id="closeDeleteModalBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="6" y1="18" x2="18" y2="6"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-text">
+          Are you sure you want to delete this meal?
+        </div>
+        <div class="confirm-sub">
+          This action cannot be undone.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmDeleteBtn" class="danger-btn">Delete</button>
+        <button id="cancelDeleteBtn" class="secondary-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly plan modal -->
+  <div id="planModal" class="modal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>Your weekly plan</h3>
+        <button class="close-circle" id="closePlanModalBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="6" y1="18" x2="18" y2="6"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="planModalBody">
+        <div id="planGrid" class="plan-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="savePlanBtn" class="primary-btn">Save your weekly plan</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tiny helpers
+    const $ = (id) => document.getElementById(id);
+    const qs = (sel) => document.querySelector(sel);
+    const qsa = (sel) => document.querySelectorAll(sel);
+
+    // Storage key
+    const STORAGE_KEY = "mealRandomizerMeals";
+    const PLAN_KEY = "mealRandomizerWeeklyPlan";
+
+    let meals = [];
+    let tempMeal = null; // for add-flow
+    let addStep = 0;     // 0 categories, 1 image
+    let editingMealId = null;
+    let deleteTargetId = null;
+    let weeklyPlan = []; // array of meal ids
+
+    function loadMeals() {
+      try {
+        meals = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch(e) {
+        meals = [];
+      }
+    }
+
+    function saveMeals() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
+    }
+
+    function getSuggestedImageUrl(name) {
+      const q = encodeURIComponent(name + " food");
+      return "https://source.unsplash.com/600x400/?" + q;
+    }
+
+    // Sidebar rendering
+    function renderMeals() {
+      const list = $("mealList");
+      const countSpan = $("mealCount");
+      const empty = $("sidebarEmpty");
+      list.innerHTML = "";
+      countSpan.textContent = meals.length;
+      empty.style.display = meals.length === 0 ? "block" : "none";
+
+      meals.forEach(meal => {
+        const row = document.createElement("div");
+        row.className = "meal-row";
+
+        const info = document.createElement("div");
+        info.className = "meal-info";
+        info.textContent = meal.name;
+
+        const actions = document.createElement("div");
+        actions.className = "meal-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "icon-btn icon-edit";
+        editBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+        editBtn.onclick = () => openEdit(meal.id);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "icon-btn icon-delete";
+        delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>';
+        delBtn.onclick = () => openDelete(meal.id);
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        row.appendChild(info);
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
+
+    // Backdrop + modal helpers
+    const backdrop = $("backdrop");
+    function openModal(modal) {
+      backdrop.classList.add("active");
+      modal.classList.add("active");
+    }
+    function closeModal(modal) {
+      modal.classList.remove("active");
+      backdrop.classList.remove("active");
+    }
+
+    // Mobile sidebar
+    const sidebar = $("sidebar");
+    const sidebarBackdrop = $("sidebarBackdrop");
+    $("menuBtn").addEventListener("click", () => {
+      sidebar.classList.add("open");
+      sidebarBackdrop.classList.add("active");
+    });
+    sidebarBackdrop.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      sidebarBackdrop.classList.remove("active");
+    });
+
+    // Add meal flow
+    $("addMealBtn").addEventListener("click", () => {
+      const nameInput = $("mealNameInput");
+      const name = nameInput.value.trim();
+      if (!name) return;
+      tempMeal = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        name,
+        dietary: [],
+        effort: null,
+        nutrition: [],
+        customCategories: "",
+        imageType: "none",
+        imageUrl: null
+      };
+      nameInput.value = "";
+      resetAddFlowUI();
+      addStep = 0;
+      updateAddStep();
+      openModal($("addFlowModal"));
+    });
+
+    function resetAddFlowUI() {
+      // Clear categories
+      qsa("#dietGroup input[type=checkbox]").forEach(cb => cb.checked = false);
+      qsa("#nutritionGroup input[type=checkbox]").forEach(cb => cb.checked = false);
+      $("customCategoriesInput").value = "";
+      qsa("#effortSegment button").forEach(b => b.classList.remove("active"));
+
+      // Suggested image
+      const box = $("suggestedImageBox");
+      const cont = $("suggestedImageContainer");
+      box.classList.remove("selected");
+      cont.innerHTML = '<div class="image-box-placeholder">No suggestion yet.</div>';
+      if (tempMeal && tempMeal.name) {
+        const img = document.createElement("img");
+        img.src = getSuggestedImageUrl(tempMeal.name);
+        img.alt = "Suggested";
+        img.className = "image-preview";
+        cont.innerHTML = "";
+        cont.appendChild(img);
+        box.classList.add("selected");
+      }
+
+      // Upload
+      const upInput = $("uploadImageInput");
+      const upPrev = $("uploadImagePreview");
+      const upPh = $("uploadImagePlaceholder");
+      upInput.value = "";
+      upPrev.style.display = "none";
+      upPh.style.display = "block";
+      delete upPrev.dataset.src;
+    }
+
+    function updateAddStep() {
+      const wizard = $("addWizardSteps");
+      const title = $("addFlowTitle");
+      if (addStep === 0) {
+        wizard.style.transform = "translateX(0)";
+        title.textContent = "Select categories";
+      } else {
+        wizard.style.transform = "translateX(-50%)";
+        title.textContent = "Add image";
+      }
+    }
+
+    // Effort segment (add)
+    $("effortSegment").addEventListener("click", (e) => {
+      if (e.target.tagName !== "BUTTON") return;
+      qsa("#effortSegment button").forEach(b => b.classList.remove("active"));
+      e.target.classList.add("active");
+    });
+
+    // Suggested image select
+    $("suggestedImageBox").addEventListener("click", () => {
+      $("suggestedImageBox").classList.toggle("selected");
+    });
+
+    // Upload add
+    $("uploadImageInput").addEventListener("change", () => {
+      const file = $("uploadImageInput").files[0];
+      const prev = $("uploadImagePreview");
+      const ph = $("uploadImagePlaceholder");
+      if (!file) {
+        prev.style.display = "none";
+        ph.style.display = "block";
+        delete prev.dataset.src;
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        prev.src = reader.result;
+        prev.dataset.src = reader.result;
+        prev.style.display = "block";
+        ph.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Add-flow primary & secondary
+    $("addFlowPrimaryBtn").addEventListener("click", () => {
+      if (!tempMeal) { closeModal($("addFlowModal")); return; }
+      if (addStep === 0) {
+        // save categories, go to image
+        tempMeal.dietary = Array.from(qsa("#dietGroup input[type=checkbox]:checked")).map(cb => cb.value);
+        tempMeal.nutrition = Array.from(qsa("#nutritionGroup input[type=checkbox]:checked")).map(cb => cb.value);
+        const effortBtn = qs("#effortSegment button.active");
+        tempMeal.effort = effortBtn ? effortBtn.dataset.value : null;
+        tempMeal.customCategories = $("customCategoriesInput").value.trim();
+        addStep = 1;
+        updateAddStep();
+      } else {
+        // finalize
+        const upPrev = $("uploadImagePreview");
+        if (upPrev.dataset.src) {
+          tempMeal.imageType = "uploaded";
+          tempMeal.imageUrl = upPrev.dataset.src;
+        } else if ($("suggestedImageBox").classList.contains("selected")) {
+          const img = $("suggestedImageContainer").querySelector("img");
+          if (img) {
+            tempMeal.imageType = "suggested";
+            tempMeal.imageUrl = img.src;
+          }
+        }
+        meals.push(tempMeal);
+        saveMeals();
+        renderMeals();
+        tempMeal = null;
+        closeModal($("addFlowModal"));
+      }
+    });
+
+    $("addFlowSecondaryBtn").addEventListener("click", () => {
+      if (!tempMeal) { closeModal($("addFlowModal")); return; }
+      if (addStep === 0) {
+        // skip categories -> go to image
+        tempMeal.dietary = [];
+        tempMeal.nutrition = [];
+        tempMeal.effort = null;
+        tempMeal.customCategories = "";
+        addStep = 1;
+        updateAddStep();
+      } else {
+        // skip image -> save meal without image
+        tempMeal.imageType = "none";
+        tempMeal.imageUrl = null;
+        meals.push(tempMeal);
+        saveMeals();
+        renderMeals();
+        tempMeal = null;
+        closeModal($("addFlowModal"));
+      }
+    });
+
+    $("closeAddFlowBtn").addEventListener("click", () => {
+      tempMeal = null;
+      closeModal($("addFlowModal"));
+    });
+
+    // Edit flow
+    function openEdit(id) {
+      const meal = meals.find(m => m.id === id);
+      if (!meal) return;
+      editingMealId = id;
+
+      $("editMealNameInput").value = meal.name;
+      // dietary
+      qsa("#editDietGroup input[type=checkbox]").forEach(cb => {
+        cb.checked = meal.dietary.includes(cb.value);
+      });
+      // nutrition
+      qsa("#editNutritionGroup input[type=checkbox]").forEach(cb => {
+        cb.checked = meal.nutrition.includes(cb.value);
+      });
+      // effort
+      qsa("#editEffortSegment button").forEach(b => {
+        b.classList.toggle("active", b.dataset.value === meal.effort);
+      });
+      // custom
+      $("editCustomCategoriesInput").value = meal.customCategories || "";
+
+      // suggested
+      const sugBox = $("editSuggestedImageBox");
+      const sugCont = $("editSuggestedImageContainer");
+      sugBox.classList.remove("selected");
+      sugCont.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = getSuggestedImageUrl(meal.name);
+      img.alt = "Suggested";
+      img.className = "image-preview";
+      sugCont.appendChild(img);
+      if (meal.imageType === "suggested") {
+        sugBox.classList.add("selected");
+        img.src = meal.imageUrl || img.src;
+      }
+
+      // uploaded
+      const upPrev = $("editUploadImagePreview");
+      const upPh = $("editUploadImagePlaceholder");
+      $("editUploadImageInput").value = "";
+      upPrev.style.display = "none";
+      upPh.style.display = "block";
+      delete upPrev.dataset.src;
+      if (meal.imageType === "uploaded" && meal.imageUrl) {
+        upPrev.src = meal.imageUrl;
+        upPrev.dataset.src = meal.imageUrl;
+        upPrev.style.display = "block";
+        upPh.style.display = "none";
+      }
+
+      openModal($("editModal"));
+    }
+
+    $("editSuggestedImageBox").addEventListener("click", () => {
+      $("editSuggestedImageBox").classList.toggle("selected");
+    });
+
+    $("editUploadImageInput").addEventListener("change", () => {
+      const file = $("editUploadImageInput").files[0];
+      const prev = $("editUploadImagePreview");
+      const ph = $("editUploadImagePlaceholder");
+      if (!file) {
+        prev.style.display = "none";
+        ph.style.display = "block";
+        delete prev.dataset.src;
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        prev.src = reader.result;
+        prev.dataset.src = reader.result;
+        prev.style.display = "block";
+        ph.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function readEditForm() {
+      const name = $("editMealNameInput").value.trim();
+      const dietary = Array.from(qsa("#editDietGroup input[type=checkbox]:checked")).map(cb => cb.value);
+      const nutrition = Array.from(qsa("#editNutritionGroup input[type=checkbox]:checked")).map(cb => cb.value);
+      const effortBtn = qs("#editEffortSegment button.active");
+      const effort = effortBtn ? effortBtn.dataset.value : null;
+      const customCategories = $("editCustomCategoriesInput").value.trim();
+      let imageType = "none";
+      let imageUrl = null;
+      const upPrev = $("editUploadImagePreview");
+      if (upPrev.dataset.src) {
+        imageType = "uploaded";
+        imageUrl = upPrev.dataset.src;
+      } else if ($("editSuggestedImageBox").classList.contains("selected")) {
+        const img = $("editSuggestedImageContainer").querySelector("img");
+        if (img) {
+          imageType = "suggested";
+          imageUrl = img.src;
+        }
+      }
+      return { name, dietary, nutrition, effort, customCategories, imageType, imageUrl };
+    }
+
+    $("editSaveBtn").addEventListener("click", () => {
+      if (!editingMealId) { closeModal($("editModal")); return; }
+      const idx = meals.findIndex(m => m.id === editingMealId);
+      if (idx === -1) { closeModal($("editModal")); return; }
+      const updated = readEditForm();
+      meals[idx] = { ...meals[idx], ...updated };
+      saveMeals();
+      renderMeals();
+      editingMealId = null;
+      closeModal($("editModal"));
+    });
+
+    function closeEditWithCheck() {
+      if (!editingMealId) { closeModal($("editModal")); return; }
+      const original = meals.find(m => m.id === editingMealId);
+      if (!original) { closeModal($("editModal")); return; }
+      const current = readEditForm();
+      const before = JSON.stringify({
+        name: original.name,
+        dietary: original.dietary || [],
+        nutrition: original.nutrition || [],
+        effort: original.effort || null,
+        customCategories: original.customCategories || "",
+        imageType: original.imageType || "none",
+        imageUrl: original.imageUrl || null
+      });
+      const after = JSON.stringify(current);
+      if (before !== after) {
+        const ok = confirm("You have unsaved changes. Close without saving?");
+        if (!ok) return;
+      }
+      editingMealId = null;
+      closeModal($("editModal"));
+    }
+
+    $("editCloseBtn").addEventListener("click", closeEditWithCheck);
+    $("closeEditModalBtn").addEventListener("click", closeEditWithCheck);
+
+    // Delete flow
+    function openDelete(id) {
+      deleteTargetId = id;
+      openModal($("deleteModal"));
+    }
+
+    $("confirmDeleteBtn").addEventListener("click", () => {
+      if (!deleteTargetId) { closeModal($("deleteModal")); return; }
+      meals = meals.filter(m => m.id !== deleteTargetId);
+      saveMeals();
+      renderMeals();
+      deleteTargetId = null;
+      closeModal($("deleteModal"));
+    });
+
+    function closeDeleteModal() {
+      deleteTargetId = null;
+      closeModal($("deleteModal"));
+    }
+
+    $("cancelDeleteBtn").addEventListener("click", closeDeleteModal);
+    $("closeDeleteModalBtn").addEventListener("click", closeDeleteModal);
+
+    // Randomizer & weekly plan
+    $("startRandomizerBtn").addEventListener("click", () => {
+      const err = $("randomizerError");
+      err.textContent = "";
+      if (meals.length === 0) {
+        err.textContent = "Please add at least one meal first.";
+        return;
+      }
+      let days = parseInt($("daysInput").value, 10);
+      if (!days || days < 1) {
+        err.textContent = "Please enter a valid number of days.";
+        return;
+      }
+      weeklyPlan = [];
+      const used = new Set();
+      for (let i = 0; i < days; i++) {
+        let pool = meals.filter(m => !used.has(m.id));
+        if (pool.length === 0) {
+          used.clear();
+          pool = meals;
+        }
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        weeklyPlan.push(pick.id);
+        used.add(pick.id);
+      }
+      renderPlan();
+      openModal($("planModal"));
+    });
+
+    function renderPlan() {
+      const grid = $("planGrid");
+      grid.innerHTML = "";
+      weeklyPlan.forEach((id, index) => {
+        const meal = meals.find(m => m.id === id);
+        if (!meal) return;
+        const card = document.createElement("div");
+        card.className = "plan-card";
+
+        const day = document.createElement("div");
+        day.className = "plan-card-day";
+        day.textContent = "Day " + (index + 1);
+
+        const name = document.createElement("div");
+        name.className = "plan-card-name";
+        name.textContent = meal.name;
+
+        card.appendChild(day);
+        card.appendChild(name);
+
+        if (meal.imageUrl) {
+          const img = document.createElement("img");
+          img.src = meal.imageUrl;
+          img.alt = meal.name;
+          card.appendChild(img);
+        }
+
+        const again = document.createElement("button");
+        again.className = "small-primary";
+        again.textContent = "Randomize again";
+        again.onclick = () => {
+          // replace this slot with another meal
+          const currentId = weeklyPlan[index];
+          const otherIds = weeklyPlan.filter((_, i) => i !== index);
+          let pool = meals.filter(m => !otherIds.includes(m.id));
+          if (pool.length === 0) pool = meals;
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          weeklyPlan[index] = pick.id;
+          renderPlan();
+        };
+
+        card.appendChild(again);
+        grid.appendChild(card);
+      });
+    }
+
+    $("closePlanModalBtn").addEventListener("click", () => {
+      closeModal($("planModal"));
+    });
+
+    $("savePlanBtn").addEventListener("click", () => {
+      localStorage.setItem(PLAN_KEY, JSON.stringify(weeklyPlan));
+      alert("Your weekly plan has been saved.");
+      closeModal($("planModal"));
+    });
+
+    // Init
+    loadMeals();
+    renderMeals();
+  </script>
+</body>
+</html>
     h2 {
       font-size: 20px;
       margin: 0;
@@ -630,3 +1911,4 @@
 
 </body>
 </html>
+

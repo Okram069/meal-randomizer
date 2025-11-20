@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meal Randomizer</title>
   <style>
     body {
-      font-family: system-ui, sans-serif;
+      font-family: sans-serif;
       background: #f9f9f9;
       color: #222;
       padding: 2rem;
@@ -33,14 +33,23 @@
       z-index: 10;
     }
     .visible { display: block; }
-    #edit-modal { display: none; background: #fff; border: 2px solid #000; padding: 1rem; position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 100; }
+    #edit-modal {
+      display: none;
+      background: #fff;
+      border: 2px solid #000;
+      padding: 1rem;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+    }
     label { display: inline-block; margin-right: 1rem; }
     button { padding: 0.5rem 1rem; margin-top: 0.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
   <h1>Meal Randomizer 🍽️</h1>
-
   <div class="input-group">
     <input type="text" id="meal-name" placeholder="Gericht hinzufügen" />
     <div>
@@ -66,18 +75,193 @@
     <h3>Gericht bearbeiten</h3>
     <input type="text" id="edit-name" placeholder="Name" />
     <div id="edit-categories"></div>
-    <img id="edit-image-preview" alt="Vorschau" style="max-width:100%;margin-top:1rem;"/>
-    <br>
+    <img id="edit-image-preview" alt="Vorschau" style="max-width:100%;margin-top:1rem;" />
+    <br />
     <button id="save-edit">Speichern</button>
     <button id="delete-meal">Löschen</button>
     <button id="cancel-edit">Abbrechen</button>
   </div>
 
-  <script type="module">
-    import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+  <script>
+    const STORAGE_KEY = "meals";
+    const PLAN_STORAGE_KEY = "weeklyPlan";
+    let meals = [];
+    let weeklyPlan = [];
 
-    // Platz für den bereits integrierten JavaScript-Code (vom vorherigen Schritt)
-    // Hinweis: Der vollständige JS-Code wird in dieser Version direkt eingebettet angenommen.
+    function generateUUID() {
+      return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now();
+    }
+
+    function saveMeals() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
+    }
+
+    function loadMeals() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        meals = stored ? JSON.parse(stored) : [];
+      } catch {
+        meals = [];
+      }
+    }
+
+    function savePlan() {
+      localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(weeklyPlan));
+    }
+
+    function loadPlan() {
+      try {
+        const stored = localStorage.getItem(PLAN_STORAGE_KEY);
+        weeklyPlan = stored ? JSON.parse(stored) : [];
+      } catch {
+        weeklyPlan = [];
+      }
+    }
+
+    function renderMeals() {
+      const list = document.getElementById("meal-list");
+      list.innerHTML = "";
+      meals.forEach((meal) => {
+        const item = document.createElement("div");
+        item.className = "meal-entry";
+        item.innerHTML = `<span>${meal.name}</span>`;
+        item.addEventListener("click", () => openEdit(meal.id));
+        list.appendChild(item);
+      });
+    }
+
+    function renderPlan() {
+      const planList = document.getElementById("plan");
+      planList.innerHTML = "";
+      weeklyPlan.forEach((id, index) => {
+        const meal = meals.find((m) => m.id === id);
+        const item = document.createElement("div");
+        item.className = "plan-entry";
+        item.innerHTML = `<strong>Tag ${index + 1}:</strong> ${meal ? meal.name : "(Gelöscht)"}`;
+        planList.appendChild(item);
+      });
+    }
+
+    function generatePlan(days) {
+      if (meals.length < days) {
+        alert("Zu wenig Mahlzeiten.");
+        return;
+      }
+
+      const used = new Set();
+      const plan = [];
+
+      for (let i = 0; i < days; i++) {
+        let pool = meals.filter((m) => !used.has(m.id));
+        if (pool.length === 0) {
+          used.clear();
+          pool = meals;
+        }
+        const chosen = pool[Math.floor(Math.random() * pool.length)];
+        used.add(chosen.id);
+        plan.push(chosen.id);
+      }
+
+      weeklyPlan = plan;
+      savePlan();
+      renderPlan();
+    }
+
+    function openEdit(id) {
+      const meal = meals.find((m) => m.id === id);
+      if (!meal) return;
+
+      const nameField = document.getElementById("edit-name");
+      const categoryContainer = document.getElementById("edit-categories");
+      const img = document.getElementById("edit-image-preview");
+
+      nameField.value = meal.name;
+      categoryContainer.innerHTML = "";
+      ["Vegan", "Vegetarisch", "Fleisch"].forEach((cat) => {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = "categories";
+        checkbox.value = cat;
+        if (meal.categories.includes(cat)) checkbox.checked = true;
+
+        const label = document.createElement("label");
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(cat));
+        categoryContainer.appendChild(label);
+      });
+
+      img.src = "";
+
+      const modal = document.getElementById("edit-modal");
+      modal.classList.add("visible");
+
+      document.getElementById("save-edit").onclick = () => {
+        meal.name = nameField.value.trim();
+        meal.categories = [...categoryContainer.querySelectorAll("input:checked")].map((c) => c.value);
+        saveMeals();
+        renderMeals();
+        modal.classList.remove("visible");
+      };
+
+      document.getElementById("delete-meal").onclick = () => {
+        const index = meals.findIndex((m) => m.id === id);
+        meals.splice(index, 1);
+        saveMeals();
+        renderMeals();
+        renderPlan();
+        modal.classList.remove("visible");
+      };
+
+      document.getElementById("cancel-edit").onclick = () => {
+        modal.classList.remove("visible");
+      };
+    }
+
+    function exportPlanAsImage() {
+      const plan = document.getElementById("plan");
+      const clone = plan.cloneNode(true);
+      const win = window.open("", "_blank");
+      win.document.write("<pre>" + clone.innerHTML + "</pre>");
+      win.document.close();
+      win.print();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadMeals();
+      loadPlan();
+      renderMeals();
+      renderPlan();
+
+      document.getElementById("generate-plan").addEventListener("click", () => {
+        const days = parseInt(document.getElementById("days").value, 10);
+        if (!days || days < 1) return alert("Bitte gültige Anzahl Tage eingeben.");
+        generatePlan(days);
+      });
+
+      document.getElementById("add-meal").addEventListener("click", () => {
+        const nameInput = document.getElementById("meal-name");
+        const name = nameInput.value.trim();
+        const categoryInputs = document.querySelectorAll("input[name='categories']:checked");
+        const categories = [...categoryInputs].map((c) => c.value);
+
+        if (!name) return alert("Name eingeben.");
+
+        const newMeal = {
+          id: generateUUID(),
+          name,
+          categories,
+          image: null
+        };
+
+        meals.push(newMeal);
+        saveMeals();
+        renderMeals();
+        nameInput.value = "";
+        document.querySelectorAll("input[name='categories']").forEach((c) => (c.checked = false));
+      });
+
+      document.getElementById("export-plan").addEventListener("click", exportPlanAsImage);
+    });
   </script>
 </body>
 </html>

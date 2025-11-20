@@ -1,93 +1,22 @@
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #f4f5f7;
-  color: #333;
-}
-.container {
-  display: flex;
-}
-.sidebar {
-  width: 240px;
-  background: white;
-  padding: 20px;
-  box-shadow: 1px 0 5px rgba(0,0,0,0.05);
-}
-.sidebar h2 {
-  margin-top: 0;
-}
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-.sidebar li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.sidebar .buttons {
-  margin-top: 20px;
-}
-button {
-  cursor: pointer;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 5px;
-}
-.save-btn {
-  background: #28c76f;
-  color: white;
-  margin-top: 10px;
-  width: 100%;
-}
-.randomize-btn {
-  background: #236aff;
-  color: white;
-  margin-top: 10px;
-  width: 100%;
-}
-.main {
-  flex: 1;
-  padding: 30px;
-}
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-.subtext {
-  color: #777;
-  font-size: 0.9em;
-}
 .version {
-  font-size: 0.7em;
-  color: #888;
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #aaa;
 }
-.modal {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+
+.import-export-controls {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  gap: 1rem;
 }
-.modal.hidden {
-  display: none;
-}
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 500px;
-}
-.modal-body .section {
-  margin-bottom: 15px;
-}
-.modal-content .close {
-  float: right;
-  font-size: 20px;
+
+#import-json,
+#export-json {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #555;
+  color: #fff;
+  border-radius: 6px;
   cursor: pointer;
 }
